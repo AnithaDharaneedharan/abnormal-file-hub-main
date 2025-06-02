@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { ArrowUpTrayIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 import { fileService } from '../services/fileService';
 import { FileUpload as FileUploadType, UploadResponse } from '../types/fileTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,11 +26,18 @@ export const FileUpload: React.FC = () => {
                         ...prev,
                         status: 'completed',
                         errorMessage: 'File already exists in the system',
-                        fileId: response.id // Store the file ID for deletion
+                        fileId: response.id
                     } : null
                 );
             } else {
-                setCurrentUpload(null);
+                setCurrentUpload((prev) =>
+                    prev ? {
+                        ...prev,
+                        status: 'success',
+                        successMessage: 'File uploaded successfully',
+                        fileId: response.id
+                    } : null
+                );
             }
         },
         onError: (error) => {
@@ -159,17 +166,28 @@ export const FileUpload: React.FC = () => {
                         </div>
                     </>
                 )}
-                {(currentUpload?.status === 'error' || currentUpload?.status === 'completed') && (
+                {(currentUpload?.status === 'error' || currentUpload?.status === 'completed' || currentUpload?.status === 'success') && (
                     <div className="mt-2">
-                        <div className={`text-sm ${currentUpload.status === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
-                            {currentUpload.errorMessage}
+                        <div className={`text-sm flex items-center justify-center ${
+                            currentUpload.status === 'error'
+                                ? 'text-red-600'
+                                : currentUpload.status === 'success'
+                                    ? 'text-green-600'
+                                    : 'text-yellow-600'
+                        }`}>
+                            {currentUpload.status === 'success' && (
+                                <CheckCircleIcon className="h-5 w-5 mr-1" />
+                            )}
+                            {currentUpload.status === 'success'
+                                ? currentUpload.successMessage
+                                : currentUpload.errorMessage}
                         </div>
                         <div className="mt-2 flex justify-center space-x-2">
                             <button
                                 onClick={() => setCurrentUpload(null)}
                                 className="text-sm text-blue-600 hover:text-blue-800 underline"
                             >
-                                Try another file
+                                {currentUpload.status === 'success' ? 'Upload another file' : 'Try another file'}
                             </button>
                             {currentUpload.fileId && (
                                 <button

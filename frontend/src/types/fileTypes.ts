@@ -3,10 +3,11 @@ export interface FileUpload {
     file: File;
     name: string;
     size: number;
-    status: 'pending' | 'uploading' | 'completed' | 'error';
+    status: 'pending' | 'uploading' | 'completed' | 'error' | 'success';
     progress: number;
     type: string;
     errorMessage?: string;
+    successMessage?: string;
     fileId?: string; // ID of the uploaded file from the server
 }
 
