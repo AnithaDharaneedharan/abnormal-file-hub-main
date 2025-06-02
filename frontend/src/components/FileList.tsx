@@ -1,13 +1,21 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { DocumentIcon } from '@heroicons/react/24/solid';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { DocumentIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { fileService } from '../services/fileService';
 import { FileType } from '../types/fileTypes';
 
 export const FileList: React.FC = () => {
+    const queryClient = useQueryClient();
     const { data: files, isLoading, error } = useQuery<FileType[]>({
         queryKey: ['files'],
         queryFn: fileService.getFiles,
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (fileId: string) => fileService.deleteFile(fileId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['files'] });
+        },
     });
 
     if (isLoading) {
@@ -17,6 +25,12 @@ export const FileList: React.FC = () => {
             </div>
         );
     }
+
+    const handleDelete = (fileId: string) => {
+        if (window.confirm('Are you sure you want to delete this file?')) {
+            deleteMutation.mutate(fileId);
+        }
+    };
 
     if (error) {
         return (
@@ -36,7 +50,7 @@ export const FileList: React.FC = () => {
 
     return (
         <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-            <ul role="list" className="divide-y divide-gray-200">
+            <ul className="divide-y divide-gray-200">
                 {files.map((file) => (
                     <li key={file.id} className="px-4 py-4 sm:px-6">
                         <div className="flex items-center">
@@ -44,7 +58,7 @@ export const FileList: React.FC = () => {
                             <div className="ml-3 flex-1">
                                 <div className="flex items-center justify-between">
                                     <p className="text-sm font-medium text-gray-900">
-                                        {file.filename}
+                                        {file.original_filename}
                                     </p>
                                     {file.isDuplicate && (
                                         <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
@@ -56,9 +70,6 @@ export const FileList: React.FC = () => {
                                     <span>{formatFileSize(file.size)}</span>
                                     <span className="mx-2">•</span>
                                     <span>{new Date(file.uploaded_at).toLocaleString()}</span>
-                                </div>
-                                <div className="mt-1 text-sm text-gray-500">
-                                    Hash: {file.file_hash}
                                 </div>
                                 <div className="mt-1">
                                     <a
@@ -72,6 +83,13 @@ export const FileList: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+                        <button
+                            onClick={() => handleDelete(file.id)}
+                            className="text-red-600 hover:text-red-800"
+                            disabled={deleteMutation.isPending}
+                        >
+                            <TrashIcon className="h-5 w-5" />
+                        </button>
                     </li>
                 ))}
             </ul>

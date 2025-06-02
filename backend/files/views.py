@@ -13,6 +13,31 @@ class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
     parser_classes = (MultiPartParser,)
 
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            file_path = instance.file.path if instance.file else None
+
+            # Delete the physical file first
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError as e:
+                    return Response(
+                        {'error': f'Failed to delete file: {str(e)}'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
+            # Delete the database record
+            instance.delete()
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'error': f'Delete failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def create(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
         if not file_obj:

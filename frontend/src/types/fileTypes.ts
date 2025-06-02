@@ -15,6 +15,7 @@ export interface FileType {
     id: string;
     url: string;
     filename: string;
+    original_filename: string;
     file_type: string;
     size: number;
     uploaded_at: string;
