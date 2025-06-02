@@ -7,6 +7,7 @@ export interface FileUpload {
     progress: number;
     type: string;
     errorMessage?: string;
+    fileId?: string; // ID of the uploaded file from the server
 }
 
 export interface FileType {

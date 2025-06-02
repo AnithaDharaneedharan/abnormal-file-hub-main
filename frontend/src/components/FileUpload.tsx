@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowUpTrayIcon } from '@heroicons/react/24/solid';
+import { ArrowUpTrayIcon, TrashIcon } from '@heroicons/react/24/solid';
 import { fileService } from '../services/fileService';
 import { FileUpload as FileUploadType, UploadResponse } from '../types/fileTypes';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,7 +25,8 @@ export const FileUpload: React.FC = () => {
                     prev ? {
                         ...prev,
                         status: 'completed',
-                        errorMessage: 'File already exists in the system'
+                        errorMessage: 'File already exists in the system',
+                        fileId: response.id // Store the file ID for deletion
                     } : null
                 );
             } else {
@@ -38,6 +39,23 @@ export const FileUpload: React.FC = () => {
                     ...prev,
                     status: 'error',
                     errorMessage: error.message || 'Upload failed. Please try again.'
+                } : null
+            );
+        },
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (fileId: string) => fileService.deleteFile(fileId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['files'] });
+            setCurrentUpload(null);
+        },
+        onError: (error) => {
+            setCurrentUpload((prev) =>
+                prev ? {
+                    ...prev,
+                    status: 'error',
+                    errorMessage: 'Failed to delete file. Please try again.'
                 } : null
             );
         },
@@ -83,6 +101,12 @@ export const FileUpload: React.FC = () => {
             uploadMutation.mutate(fileUpload);
         }
     }, [uploadMutation]);
+
+    const handleDelete = useCallback((fileId: string) => {
+        if (fileId) {
+            deleteMutation.mutate(fileId);
+        }
+    }, [deleteMutation]);
 
     return (
         <div className="w-full max-w-xl mx-auto p-6">
@@ -136,14 +160,28 @@ export const FileUpload: React.FC = () => {
                     </>
                 )}
                 {(currentUpload?.status === 'error' || currentUpload?.status === 'completed') && (
-                    <div className={`mt-2 text-sm ${currentUpload.status === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
-                        {currentUpload.errorMessage}
-                        <button
-                            onClick={() => setCurrentUpload(null)}
-                            className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                        >
-                            Try another file
-                        </button>
+                    <div className="mt-2">
+                        <div className={`text-sm ${currentUpload.status === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
+                            {currentUpload.errorMessage}
+                        </div>
+                        <div className="mt-2 flex justify-center space-x-2">
+                            <button
+                                onClick={() => setCurrentUpload(null)}
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                            >
+                                Try another file
+                            </button>
+                            {currentUpload.fileId && (
+                                <button
+                                    onClick={() => handleDelete(currentUpload.fileId!)}
+                                    className="inline-flex items-center text-sm text-red-600 hover:text-red-800"
+                                    disabled={deleteMutation.isPending}
+                                >
+                                    <TrashIcon className="h-4 w-4 mr-1" />
+                                    {deleteMutation.isPending ? 'Deleting...' : 'Delete file'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
