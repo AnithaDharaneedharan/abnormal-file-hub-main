@@ -13,19 +13,29 @@ export const FileUpload: React.FC = () => {
     const uploadMutation = useMutation<UploadResponse, Error, FileUploadType>({
         mutationFn: (fileUpload) => {
             return fileService.uploadFile(fileUpload, (progress) => {
-                setCurrentUpload((prev) => 
+                setCurrentUpload((prev) =>
                     prev ? { ...prev, progress, status: 'uploading' } : null
                 );
             });
         },
-        onSuccess: () => {
+        onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ['files'] });
-            setCurrentUpload(null);
+            if (response.isDuplicate) {
+                setCurrentUpload((prev) =>
+                    prev ? {
+                        ...prev,
+                        status: 'completed',
+                        errorMessage: 'File already exists in the system'
+                    } : null
+                );
+            } else {
+                setCurrentUpload(null);
+            }
         },
         onError: (error) => {
-            setCurrentUpload((prev) => 
-                prev ? { 
-                    ...prev, 
+            setCurrentUpload((prev) =>
+                prev ? {
+                    ...prev,
                     status: 'error',
                     errorMessage: error.message || 'Upload failed. Please try again.'
                 } : null
@@ -56,7 +66,7 @@ export const FileUpload: React.FC = () => {
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
-        
+
         const files = Array.from(e.dataTransfer.files);
         if (files.length > 0) {
             const fileUpload = createFileUpload(files[0]);
@@ -125,12 +135,18 @@ export const FileUpload: React.FC = () => {
                         </div>
                     </>
                 )}
-                {currentUpload?.status === 'error' && (
-                    <p className="mt-2 text-sm text-red-600">
+                {(currentUpload?.status === 'error' || currentUpload?.status === 'completed') && (
+                    <div className={`mt-2 text-sm ${currentUpload.status === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
                         {currentUpload.errorMessage}
-                    </p>
+                        <button
+                            onClick={() => setCurrentUpload(null)}
+                            className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                        >
+                            Try another file
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
     );
-}; 
+};
