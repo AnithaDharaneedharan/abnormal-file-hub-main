@@ -1,7 +1,7 @@
-# Delete migration files
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-find . -path "*/migrations/*.pyc"  -delete
+#!/bin/sh
 
-# Recreate migrations
-python manage.py makemigrations
+echo "Running migrations..."
 python manage.py migrate
+
+echo "Starting server..."
+gunicorn core.wsgi:application --bind 0.0.0.0:8000

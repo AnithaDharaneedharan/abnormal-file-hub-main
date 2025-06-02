@@ -1,12 +1,13 @@
 services:
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - backend_storage:/app/media
+      - backend_storage:/app/media  # Base storage
+      - ./backend/media:/app/media  # Local storage (takes precedence)
       - backend_static:/app/staticfiles
       - backend_data:/app/data
     environment:
@@ -15,7 +16,7 @@ services:
     restart: always
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
@@ -35,4 +36,4 @@ services:
 volumes:
   backend_storage:
   backend_static:
-  backend_data: 
+  backend_data:

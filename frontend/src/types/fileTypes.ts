@@ -16,7 +16,7 @@ export interface FileType {
     file_type: string;
     size: number;
     uploaded_at: string;
-    hash: string;
+    file_hash: string;
     isDuplicate?: boolean;
 }
 
@@ -28,6 +28,6 @@ export interface FileListItem {
     filename: string;
     size: number;
     url: string;
-    hash: string;
+    file_hash: string;
     uploadedAt: string;
-} 
+}

@@ -50,8 +50,8 @@ export const FileList: React.FC = () => {
                                     <span className="mx-2">•</span>
                                     <span>{new Date(file.uploaded_at).toLocaleString()}</span>
                                 </div>
-                                <div className="mt-1 text-xs text-gray-500">
-                                    Hash: {file.hash}
+                                <div className="mt-1 text-sm text-gray-500">
+                                    Hash: {file.file_hash}
                                 </div>
                                 <div className="mt-1">
                                     <a
@@ -78,4 +78,4 @@ const formatFileSize = (bytes: number): string => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-}; 
+};
