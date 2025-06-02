@@ -6,8 +6,15 @@ import re
 
 def validate_uuid_filename(filename):
     """Validate that filename follows UUID pattern"""
+    if hasattr(filename, 'name'):  # Handle FieldFile objects
+        filename = filename.name
+
+    if not filename:
+        return
+
     pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[a-z0-9]+$'
-    if not re.match(pattern, os.path.basename(filename).lower()):
+    basename = os.path.basename(str(filename)).lower()
+    if not re.match(pattern, basename):
         raise ValidationError('Filename must be a UUID with extension')
 
 def file_upload_path(instance, filename):
@@ -19,17 +26,13 @@ def file_upload_path(instance, filename):
     # Generate a new UUID filename
     new_filename = f"{uuid.uuid4()}{ext}"
 
-    # Validate the generated filename
-    validate_uuid_filename(new_filename)
-
     return os.path.join('uploads', new_filename)
 
 class File(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(
         upload_to=file_upload_path,
-        max_length=255,
-        validators=[validate_uuid_filename]
+        max_length=255
     )
     original_filename = models.CharField(max_length=255)
     file_type = models.CharField(max_length=100)
@@ -46,19 +49,26 @@ class File(models.Model):
     def clean(self):
         """Additional model validation"""
         super().clean()
-        if self.file:
+        if self.file and not self._state.adding:  # Only validate for updates, not creation
             # Validate filename
-            validate_uuid_filename(os.path.basename(self.file.name))
+            validate_uuid_filename(self.file.name)
 
-    def save(self, *args, **kwargs):
-        """Ensure validation runs on save"""
-        self.full_clean()
+    def save(self, *args, validate_uuid=True, **kwargs):
+        """
+        Save the model instance.
+
+        Args:
+            validate_uuid (bool): Whether to validate UUID filename format.
+                                Set to False during initial file upload.
+        """
+        if validate_uuid:
+            self.full_clean()
         super().save(*args, **kwargs)
 
     @property
     def filename(self):
         """Get the current filename on disk"""
-        return os.path.basename(self.file.name)
+        return os.path.basename(self.file.name) if self.file else None
 
     @property
     def stored_filename(self):

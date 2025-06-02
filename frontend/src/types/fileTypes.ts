@@ -18,6 +18,7 @@ export interface FileType {
     uploaded_at: string;
     file_hash: string;
     isDuplicate?: boolean;
+    message?: string;
 }
 
 // Response from the server when uploading a file

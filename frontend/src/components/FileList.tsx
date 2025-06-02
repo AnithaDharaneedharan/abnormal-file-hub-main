@@ -42,9 +42,16 @@ export const FileList: React.FC = () => {
                         <div className="flex items-center">
                             <DocumentIcon className="h-6 w-6 text-gray-400" />
                             <div className="ml-3 flex-1">
-                                <p className="text-sm font-medium text-gray-900">
-                                    {file.filename}
-                                </p>
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium text-gray-900">
+                                        {file.filename}
+                                    </p>
+                                    {file.isDuplicate && (
+                                        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                                            Duplicate
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="mt-1 flex text-xs text-gray-500">
                                     <span>{formatFileSize(file.size)}</span>
                                     <span className="mx-2">•</span>
