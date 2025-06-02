@@ -8,6 +8,8 @@ import hashlib
 from django.core.files.base import ContentFile
 import mimetypes
 import os
+from django.utils import timezone
+from datetime import timedelta
 
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
@@ -17,12 +19,35 @@ class FileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = File.objects.all()
         search = self.request.query_params.get('search', None)
+        date_filter = self.request.query_params.get('date', None)  # today, week, month, year
+        size_filter = self.request.query_params.get('size', None)  # small, medium, large
 
-        if search:
+        if search and len(search) >= 2:
             queryset = queryset.filter(
                 Q(original_filename__icontains=search) |
                 Q(file_type__icontains=search)
             )
+
+        if date_filter:
+            now = timezone.now()
+
+            if date_filter == 'today':
+                queryset = queryset.filter(uploaded_at__date=now.date())
+            elif date_filter == 'week':
+                queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=7))
+            elif date_filter == 'month':
+                queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=30))
+            elif date_filter == 'year':
+                queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=365))
+
+        if size_filter:
+            # small: < 1MB, medium: 1MB-10MB, large: > 10MB
+            if size_filter == 'small':
+                queryset = queryset.filter(size__lt=1024 * 1024)  # < 1MB
+            elif size_filter == 'medium':
+                queryset = queryset.filter(size__gte=1024 * 1024, size__lt=10 * 1024 * 1024)
+            elif size_filter == 'large':
+                queryset = queryset.filter(size__gte=10 * 1024 * 1024)
 
         return queryset.order_by('-uploaded_at')
 

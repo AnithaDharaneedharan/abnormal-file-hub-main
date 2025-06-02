@@ -8,10 +8,17 @@ import debounce from 'lodash/debounce';
 export const FileList: React.FC = () => {
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
+    const [dateFilter, setDateFilter] = useState('');
+    const [sizeFilter, setSizeFilter] = useState('');
 
     const { data: files, isLoading, error } = useQuery<FileType[]>({
-        queryKey: ['files', searchTerm],
-        queryFn: () => fileService.getFiles(searchTerm),
+        queryKey: ['files', searchTerm, dateFilter, sizeFilter],
+        queryFn: () => fileService.getFiles({
+            search: searchTerm,
+            date: dateFilter || undefined,
+            size: sizeFilter || undefined
+        }),
+        enabled: !searchTerm || searchTerm.length >= 2,
     });
 
     const deleteMutation = useMutation({
@@ -23,7 +30,9 @@ export const FileList: React.FC = () => {
 
     const debouncedSearch = useMemo(
         () => debounce((value: string) => {
-            setSearchTerm(value);
+            if (!value || value.length >= 2) {
+                setSearchTerm(value);
+            }
         }, 300),
         []
     );
@@ -36,6 +45,14 @@ export const FileList: React.FC = () => {
         if (window.confirm('Are you sure you want to delete this file?')) {
             deleteMutation.mutate(fileId);
         }
+    };
+
+    const handleDateFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setDateFilter(e.target.value);
+    };
+
+    const handleSizeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSizeFilter(e.target.value);
     };
 
     const renderContent = () => {
@@ -112,17 +129,49 @@ export const FileList: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+                {/* Search Box */}
+                <div className="relative flex-1">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Search files..."
+                        onChange={handleSearchChange}
+                        defaultValue={searchTerm}
+                    />
                 </div>
-                <input
-                    type="text"
-                    className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Search files..."
-                    onChange={handleSearchChange}
-                    defaultValue={searchTerm}
-                />
+
+                {/* Date Filter */}
+                <div className="w-full sm:w-48">
+                    <select
+                        className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={dateFilter}
+                        onChange={handleDateFilterChange}
+                    >
+                        <option value="">Filter by date</option>
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 days</option>
+                        <option value="month">Last 30 days</option>
+                        <option value="year">Last year</option>
+                    </select>
+                </div>
+
+                {/* Size Filter */}
+                <div className="w-full sm:w-48">
+                    <select
+                        className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={sizeFilter}
+                        onChange={handleSizeFilterChange}
+                    >
+                        <option value="">Filter by size</option>
+                        <option value="small">Small (&lt; 1MB)</option>
+                        <option value="medium">Medium (1-10MB)</option>
+                        <option value="large">Large (&gt; 10MB)</option>
+                    </select>
+                </div>
             </div>
 
             <div className="overflow-hidden bg-white shadow sm:rounded-lg">

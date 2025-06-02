@@ -21,12 +21,18 @@ export const fileService = {
         };
     },
 
-    getFiles: async (search?: string): Promise<FileType[]> => {
-        const params = new URLSearchParams();
-        if (search) {
-            params.append('search', search);
+    getFiles: async (params?: { search?: string; date?: string; size?: string }): Promise<FileType[]> => {
+        const searchParams = new URLSearchParams();
+        if (params?.search) {
+            searchParams.append('search', params.search);
         }
-        const response = await apiClient.get<FileType[]>('/files/', { params });
+        if (params?.date) {
+            searchParams.append('date', params.date);
+        }
+        if (params?.size) {
+            searchParams.append('size', params.size);
+        }
+        const response = await apiClient.get<FileType[]>('/files/', { params: searchParams });
         return response.data;
     },
 
