@@ -38,29 +38,77 @@ export const FileList: React.FC = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center p-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <div className="flex justify-center items-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            );
+        }
 
-    if (error) {
-        return (
-            <div className="text-center p-8 text-red-600">
-                Failed to load files. Please try again.
-            </div>
-        );
-    }
+        if (error) {
+            return (
+                <div className="text-center p-8 text-red-600">
+                    Failed to load files. Please try again.
+                </div>
+            );
+        }
 
-    if (!files?.length) {
+        if (!files?.length) {
+            return (
+                <div className="text-center p-8 text-gray-500">
+                    {searchTerm ? 'No files match your search.' : 'No files uploaded yet.'}
+                </div>
+            );
+        }
+
         return (
-            <div className="text-center p-8 text-gray-500">
-                {searchTerm ? 'No files match your search.' : 'No files uploaded yet.'}
-            </div>
+            <ul className="divide-y divide-gray-200">
+                {files.map((file) => (
+                    <li key={file.id} className="px-4 py-4 sm:px-6">
+                        <div className="flex items-center">
+                            <DocumentIcon className="h-6 w-6 text-gray-400" />
+                            <div className="ml-3 flex-1">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium text-gray-900">
+                                        {file.original_filename}
+                                    </p>
+                                    {file.isDuplicate && (
+                                        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                                            Duplicate
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="mt-1 flex text-xs text-gray-500">
+                                    <span>{formatFileSize(file.size)}</span>
+                                    <span className="mx-2">•</span>
+                                    <span>{new Date(file.uploaded_at).toLocaleString()}</span>
+                                </div>
+                                <div className="mt-1">
+                                    <a
+                                        href={file.url}
+                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleDelete(file.id)}
+                            className="text-red-600 hover:text-red-800"
+                            disabled={deleteMutation.isPending}
+                        >
+                            <TrashIcon className="h-5 w-5" />
+                        </button>
+                    </li>
+                ))}
+            </ul>
         );
-    }
+    };
 
     return (
         <div className="space-y-4">
@@ -78,49 +126,7 @@ export const FileList: React.FC = () => {
             </div>
 
             <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-                <ul className="divide-y divide-gray-200">
-                    {files.map((file) => (
-                        <li key={file.id} className="px-4 py-4 sm:px-6">
-                            <div className="flex items-center">
-                                <DocumentIcon className="h-6 w-6 text-gray-400" />
-                                <div className="ml-3 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {file.original_filename}
-                                        </p>
-                                        {file.isDuplicate && (
-                                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                                                Duplicate
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="mt-1 flex text-xs text-gray-500">
-                                        <span>{formatFileSize(file.size)}</span>
-                                        <span className="mx-2">•</span>
-                                        <span>{new Date(file.uploaded_at).toLocaleString()}</span>
-                                    </div>
-                                    <div className="mt-1">
-                                        <a
-                                            href={file.url}
-                                            className="text-xs text-blue-600 hover:text-blue-800"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => handleDelete(file.id)}
-                                className="text-red-600 hover:text-red-800"
-                                disabled={deleteMutation.isPending}
-                            >
-                                <TrashIcon className="h-5 w-5" />
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                {renderContent()}
             </div>
         </div>
     );
