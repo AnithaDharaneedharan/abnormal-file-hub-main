@@ -21,12 +21,16 @@ export const fileService = {
         };
     },
 
-    getFiles: async (): Promise<FileType[]> => {
-        const response = await apiClient.get<FileType[]>('/files/');
+    getFiles: async (search?: string): Promise<FileType[]> => {
+        const params = new URLSearchParams();
+        if (search) {
+            params.append('search', search);
+        }
+        const response = await apiClient.get<FileType[]>('/files/', { params });
         return response.data;
     },
 
     deleteFile: async (fileId: string): Promise<void> => {
-        await apiClient.delete(`/files/${fileId}`);
+        await apiClient.delete(`/files/${fileId}/`);
     },
 };

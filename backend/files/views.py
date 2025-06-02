@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from django.db.models import Q
 from .models import File
 from .serializers import FileSerializer
 import hashlib
@@ -9,9 +10,21 @@ import mimetypes
 import os
 
 class FileViewSet(viewsets.ModelViewSet):
-    queryset = File.objects.all()
     serializer_class = FileSerializer
     parser_classes = (MultiPartParser,)
+    queryset = File.objects.all()
+
+    def get_queryset(self):
+        queryset = File.objects.all()
+        search = self.request.query_params.get('search', None)
+
+        if search:
+            queryset = queryset.filter(
+                Q(original_filename__icontains=search) |
+                Q(file_type__icontains=search)
+            )
+
+        return queryset.order_by('-uploaded_at')
 
     def destroy(self, request, *args, **kwargs):
         try:
