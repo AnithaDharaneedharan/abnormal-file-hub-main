@@ -104,25 +104,28 @@ export const FileList: React.FC = () => {
                                     <span className="mx-2">•</span>
                                     <span>{new Date(file.uploaded_at).toLocaleString()}</span>
                                 </div>
-                                <div className="mt-1">
+                                <div className="mt-2 flex items-center space-x-4">
                                     <a
                                         href={file.url}
-                                        className="text-xs text-blue-600 hover:text-blue-800"
+                                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
                                         Download
                                     </a>
                                 </div>
                             </div>
+                            <button
+                                onClick={() => handleDelete(file.id)}
+                                className="text-red-600 hover:text-red-800"
+                                disabled={deleteMutation.isPending}
+                            >
+                                <TrashIcon className="h-5 w-5" />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => handleDelete(file.id)}
-                            className="text-red-600 hover:text-red-800"
-                            disabled={deleteMutation.isPending}
-                        >
-                            <TrashIcon className="h-5 w-5" />
-                        </button>
                     </li>
                 ))}
             </ul>
