@@ -21,7 +21,12 @@ export const fileService = {
         };
     },
 
-    getFiles: async (params?: { search?: string; date?: string; size?: string }): Promise<FileType[]> => {
+    getFiles: async (params?: {
+        search?: string;
+        date?: string;
+        size?: string;
+        searchType?: 'filename' | 'content';
+    }): Promise<FileType[]> => {
         const searchParams = new URLSearchParams();
         if (params?.search) {
             searchParams.append('search', params.search);
@@ -31,6 +36,9 @@ export const fileService = {
         }
         if (params?.size) {
             searchParams.append('size', params.size);
+        }
+        if (params?.searchType) {
+            searchParams.append('searchType', params.searchType);
         }
         const response = await apiClient.get<FileType[]>('/files/', { params: searchParams });
         return response.data;

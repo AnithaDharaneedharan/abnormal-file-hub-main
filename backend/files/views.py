@@ -19,14 +19,21 @@ class FileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = File.objects.all()
         search = self.request.query_params.get('search', None)
-        date_filter = self.request.query_params.get('date', None)  # today, week, month, year
-        size_filter = self.request.query_params.get('size', None)  # small, medium, large
+        search_type = self.request.query_params.get('searchType', 'filename')  # 'filename' or 'content'
+        date_filter = self.request.query_params.get('date', None)
+        size_filter = self.request.query_params.get('size', None)
 
         if search and len(search) >= 2:
-            queryset = queryset.filter(
-                Q(original_filename__icontains=search) |
-                Q(file_type__icontains=search)
-            )
+            if search_type == 'content':
+                queryset = queryset.filter(
+                    Q(content__icontains=search) &
+                    Q(file_type__in=File.SEARCHABLE_TYPES)
+                )
+            else:  # filename search
+                queryset = queryset.filter(
+                    Q(original_filename__icontains=search) |
+                    Q(file_type__icontains=search)
+                )
 
         if date_filter:
             now = timezone.now()

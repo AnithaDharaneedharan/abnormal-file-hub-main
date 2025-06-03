@@ -8,13 +8,15 @@ import debounce from 'lodash/debounce';
 export const FileList: React.FC = () => {
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchType, setSearchType] = useState<'filename' | 'content'>('filename');
     const [dateFilter, setDateFilter] = useState('');
     const [sizeFilter, setSizeFilter] = useState('');
 
     const { data: files, isLoading, error } = useQuery<FileType[]>({
-        queryKey: ['files', searchTerm, dateFilter, sizeFilter],
+        queryKey: ['files', searchTerm, searchType, dateFilter, sizeFilter],
         queryFn: () => fileService.getFiles({
             search: searchTerm,
+            searchType,
             date: dateFilter || undefined,
             size: sizeFilter || undefined
         }),
@@ -130,18 +132,30 @@ export const FileList: React.FC = () => {
     return (
         <div className="space-y-4">
             <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-                {/* Search Box */}
+                {/* Search Box with Type Toggle */}
                 <div className="relative flex-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    <div className="flex space-x-2">
+                        <div className="relative flex-1">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder={`Search ${searchType === 'content' ? 'inside files' : 'filenames'}...`}
+                                onChange={handleSearchChange}
+                                defaultValue={searchTerm}
+                            />
+                        </div>
+                        <select
+                            className="rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={searchType}
+                            onChange={(e) => setSearchType(e.target.value as 'filename' | 'content')}
+                        >
+                            <option value="filename">Filename</option>
+                            <option value="content">Content</option>
+                        </select>
                     </div>
-                    <input
-                        type="text"
-                        className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="Search files..."
-                        onChange={handleSearchChange}
-                        defaultValue={searchTerm}
-                    />
                 </div>
 
                 {/* Date Filter */}
