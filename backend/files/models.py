@@ -1,5 +1,7 @@
+import mimetypes
 from django.db import models
 from django.core.exceptions import ValidationError
+from .utils import get_file_category
 import uuid
 import os
 import re
@@ -25,7 +27,6 @@ def file_upload_path(instance, filename):
 
     # Generate a new UUID filename
     new_filename = f"{uuid.uuid4()}{ext}"
-
     return os.path.join('uploads', new_filename)
 
 class File(models.Model):
@@ -39,7 +40,7 @@ class File(models.Model):
     size = models.BigIntegerField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
     file_hash = models.CharField(max_length=64, blank=True, null=True)
-
+    category = models.CharField(max_length=50, blank=True)
     class Meta:
         ordering = ['-uploaded_at']
 
@@ -63,6 +64,13 @@ class File(models.Model):
         """
         if validate_uuid:
             self.full_clean()
+
+        # Automatically determine file category from MIME type
+        if self.file:
+            mime_type, _ = mimetypes.guess_type(self.original_filename)
+            self.file_type = mime_type or 'application/octet-stream'
+            self.category = get_file_category(self.file_type)
+            
         super().save(*args, **kwargs)
 
     @property
