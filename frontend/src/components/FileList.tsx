@@ -106,7 +106,7 @@ export const FileList: React.FC = () => {
                                 </div>
                                 <div className="mt-2 flex items-center space-x-4">
                                     <a
-                                        href={file.file}
+                                        href={file.url}
                                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                         target="_blank"
                                         rel="noopener noreferrer"
