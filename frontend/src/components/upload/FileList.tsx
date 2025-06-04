@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileUpload } from '../../types/file.types';
+import { FileUpload } from '../../types/fileTypes';
 import { FileItem } from './FileItem';
 
 interface FileListProps {

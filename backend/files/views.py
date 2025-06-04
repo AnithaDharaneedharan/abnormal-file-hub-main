@@ -16,6 +16,14 @@ class FileViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser,)
     queryset = File.objects.all()
 
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def get_queryset(self):
         queryset = File.objects.all()
         search = self.request.query_params.get('search', None)

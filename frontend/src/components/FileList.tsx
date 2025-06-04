@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DocumentIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import { fileService } from '../services/fileService';
@@ -106,7 +106,7 @@ export const FileList: React.FC = () => {
                                 </div>
                                 <div className="mt-2 flex items-center space-x-4">
                                     <a
-                                        href={file.url}
+                                        href={file.file}
                                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                         target="_blank"
                                         rel="noopener noreferrer"

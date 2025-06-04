@@ -1,11 +1,11 @@
 import React from 'react';
-import { FileUpload } from '../../types/file.types';
+import { FileUpload } from '../../types/fileTypes';
 import { formatFileSize } from '../../utils/file.utils';
-import { 
-  DocumentIcon, 
-  CheckCircleIcon, 
-  ExclamationTriangleIcon, 
-  XMarkIcon 
+import {
+  DocumentIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon
 } from '../ui/Icons';
 
 interface FileItemProps {
@@ -16,11 +16,11 @@ interface FileItemProps {
 export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
   const getStatusIcon = (status: FileUpload['status']): React.ReactNode => {
     switch (status) {
-      case 'completed': 
+      case 'completed':
         return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'error': 
+      case 'error':
         return <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />;
-      default: 
+      default:
         return <DocumentIcon className="w-5 h-5 text-gray-400" />;
     }
   };
@@ -55,12 +55,12 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {file.status === 'uploading' && (
             <div className="flex items-center gap-2">
               <div className="w-24 bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(file.status)}`}
                   style={{ width: `${file.progress}%` }}
                 />
@@ -70,7 +70,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
               </span>
             </div>
           )}
-          
+
           {file.status === 'completed' && (
             <span className="text-sm text-green-600 font-medium">Uploaded</span>
           )}
@@ -78,7 +78,7 @@ export const FileItem: React.FC<FileItemProps> = ({ file, onRemove }) => {
           {file.status === 'error' && (
             <span className="text-sm text-red-600 font-medium">Failed</span>
           )}
-          
+
           {(file.status === 'pending' || file.status === 'error') && (
             <button
               onClick={() => onRemove(file.id)}
