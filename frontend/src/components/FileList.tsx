@@ -69,15 +69,15 @@ export const FileList: React.FC = () => {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center items-center p-8 bg-black">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
       );
     }
 
     if (error) {
       return (
-        <div className="text-center p-8 text-red-600">
+        <div className="text-center p-8 text-white bg-black">
           Failed to load files. Please try again.
         </div>
       );
@@ -85,7 +85,7 @@ export const FileList: React.FC = () => {
 
     if (!files?.length) {
       return (
-        <div className="text-center p-8 text-gray-500">
+        <div className="text-center p-8 text-gray-400 bg-black">
           {searchTerm
             ? "No files match your search."
             : "No files uploaded yet."}
@@ -94,70 +94,62 @@ export const FileList: React.FC = () => {
     }
 
     return (
-      <ul className="divide-y divide-gray-200">
+      <ul className="divide-y divide-gray-800 bg-black">
         {files.map((file) => (
           <li
             key={file.id}
-            className="px-4 py-4 sm:px-6 hover:bg-gray-50 transition rounded-lg"
+            className="px-4 py-4 sm:px-6 hover:bg-gray-900 transition-colors duration-200"
           >
-            <div className="flex items-start justify-between gap-4">
-              {/* File Icon and Info */}
-              <div className="flex items-start gap-3 flex-1">
-                <FileIcon category={file.category} />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-900">
-                      {file.original_filename}
-                    </p>
-                    {file.isDuplicate && (
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                        Duplicate
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap text-xs text-gray-500 gap-x-2">
-                    <span>{formatFileSize(file.size)}</span>
-                    <span>•</span>
-                    <span>{new Date(file.uploaded_at).toLocaleString()}</span>
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="mt-3 flex gap-3">
-                    <a
-                      href={file.url}
-                      className="inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
-                      target="_blank"
-                      rel="noopener noreferrer"
+            <div className="flex items-center">
+              <FileIcon category={file.category} />
+              <div className="ml-3 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-white">
+                    {file.original_filename}
+                  </p>
+                  {file.isDuplicate && (
+                    <span className="inline-flex items-center rounded-full bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-200">
+                      Duplicate
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 flex text-xs text-gray-400">
+                  <span>{formatFileSize(file.size)}</span>
+                  <span className="mx-2">•</span>
+                  <span>{new Date(file.uploaded_at).toLocaleString()}</span>
+                </div>
+                <div className="mt-2 flex items-center space-x-4">
+                  <a
+                    href={file.url}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                      Download
-                    </a>
-
-                    <button
-                      onClick={() => handleDelete(file.id)}
-                      className="inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <TrashIcon className="h-4 w-4 mr-1" />
-                      Delete
-                    </button>
-                  </div>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    Download
+                  </a>
                 </div>
               </div>
+              <button
+                onClick={() => handleDelete(file.id)}
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+                disabled={deleteMutation.isPending}
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
             </div>
           </li>
         ))}
@@ -166,18 +158,18 @@ export const FileList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+    <div className="space-y-4 p-6 bg-black min-h-screen">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 bg-gray-900 p-4 rounded-lg border border-gray-800">
         {/* Search Box with Type Toggle */}
         <div className="relative flex-1">
           <div className="flex space-x-2">
             <div className="relative flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
               </div>
               <input
                 type="text"
-                className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-10 pr-3 text-sm placeholder-gray-500 text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
                 placeholder={`Search ${
                   searchType === "content" ? "inside files" : "filenames"
                 }...`}
@@ -186,7 +178,7 @@ export const FileList: React.FC = () => {
               />
             </div>
             <select
-              className="rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
               value={searchType}
               onChange={(e) =>
                 setSearchType(e.target.value as "filename" | "content")
@@ -201,7 +193,7 @@ export const FileList: React.FC = () => {
         {/* Date Filter */}
         <div className="w-full sm:w-48">
           <select
-            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
             value={dateFilter}
             onChange={handleDateFilterChange}
           >
@@ -216,7 +208,7 @@ export const FileList: React.FC = () => {
         {/* Size Filter */}
         <div className="w-full sm:w-48">
           <select
-            className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
             value={sizeFilter}
             onChange={handleSizeFilterChange}
           >
@@ -228,7 +220,7 @@ export const FileList: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+      <div className="overflow-hidden bg-black border border-gray-800 rounded-lg">
         {renderContent()}
       </div>
     </div>
