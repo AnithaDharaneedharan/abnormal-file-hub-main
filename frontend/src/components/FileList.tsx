@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { DocumentIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import { fileService } from '../services/fileService';
 import { FileType } from '../types/fileTypes';
+import { FileIcon } from './FileIcon';
 import debounce from 'lodash/debounce';
 
 export const FileList: React.FC = () => {
@@ -87,7 +88,7 @@ export const FileList: React.FC = () => {
                 {files.map((file) => (
                     <li key={file.id} className="px-4 py-4 sm:px-6">
                         <div className="flex items-center">
-                            <DocumentIcon className="h-6 w-6 text-gray-400" />
+                            <FileIcon category={file.category} />
                             <div className="ml-3 flex-1">
                                 <div className="flex items-center justify-between">
                                     <p className="text-sm font-medium text-gray-900">

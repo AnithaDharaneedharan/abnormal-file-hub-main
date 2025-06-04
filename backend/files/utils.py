@@ -1,13 +1,45 @@
-def get_file_category(mime_type):
-    if mime_type.startswith("image/"):
-        return "image"
-    elif mime_type.startswith("video/"):
-        return "video"
-    elif mime_type.startswith("text/"):
-        return "text"
-    elif mime_type in ["application/pdf"]:
-        return "pdf"
-    elif mime_type.startswith("application/vnd"):
-        return "doc"  # MS Office formats
-    else:
-        return "other"
+def get_file_category(mime_type: str) -> str:
+    """
+    Determine file category based on MIME type.
+    """
+    if not mime_type:
+        return 'other'
+
+    mime_type = mime_type.lower()
+
+    # Images
+    if mime_type.startswith('image/'):
+        return 'image'
+
+    # Videos
+    if mime_type.startswith('video/'):
+        return 'video'
+
+    # Audio
+    if mime_type.startswith('audio/'):
+        return 'audio'
+
+    # Documents
+    if mime_type.startswith('text/') or \
+       mime_type in ['application/pdf', 'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document']:
+        return 'document'
+
+    # Spreadsheets
+    if mime_type in ['application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'text/csv']:
+        return 'spreadsheet'
+
+    # Archives
+    if mime_type in ['application/zip', 'application/x-rar-compressed',
+                    'application/x-tar', 'application/x-7z-compressed',
+                    'application/gzip']:
+        return 'archive'
+
+    # Code files
+    if mime_type in ['text/x-python', 'application/javascript',
+                    'text/html', 'text/css', 'application/json']:
+        return 'code'
+
+    return 'other'

@@ -20,6 +20,7 @@ export interface FileType {
     size: number;
     uploaded_at: string;
     file_hash: string;
+    category: string;
     isDuplicate?: boolean;
     message?: string;
 }

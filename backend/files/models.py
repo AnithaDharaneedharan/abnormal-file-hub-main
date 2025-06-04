@@ -5,6 +5,9 @@ from .utils import get_file_category
 import uuid
 import os
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 def validate_uuid_filename(filename):
     """Validate that filename follows UUID pattern"""
@@ -68,9 +71,11 @@ class File(models.Model):
         # Automatically determine file category from MIME type
         if self.file:
             mime_type, _ = mimetypes.guess_type(self.original_filename)
+            logger.info(f"File: {self.original_filename}, MIME type: {mime_type}")
             self.file_type = mime_type or 'application/octet-stream'
             self.category = get_file_category(self.file_type)
-            
+            logger.info(f"Categorized as: {self.category}")
+
         super().save(*args, **kwargs)
 
     @property
