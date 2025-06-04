@@ -98,7 +98,7 @@ export const FileList: React.FC = () => {
         {files.map((file) => (
           <li
             key={file.id}
-            className="px-4 py-4 sm:px-6 hover:bg-gray-900 transition-colors duration-200"
+            className="px-6 py-5 sm:px-8 hover:bg-gray-900 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl group"
           >
             <div className="flex items-center">
               <FileIcon category={file.category} />
@@ -108,7 +108,7 @@ export const FileList: React.FC = () => {
                     {file.original_filename}
                   </p>
                   {file.isDuplicate && (
-                    <span className="inline-flex items-center rounded-full bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-200">
+                    <span className="inline-flex items-center rounded-full bg-gray-800 px-3 py-0.5 text-xs font-medium text-gray-200 shadow-sm shadow-gray-900/50">
                       Duplicate
                     </span>
                   )}
@@ -121,13 +121,13 @@ export const FileList: React.FC = () => {
                 <div className="mt-2 flex items-center space-x-4">
                   <a
                     href={file.url}
-                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-xl hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 shadow-sm shadow-gray-900/50"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1.5"
+                      className="h-4 w-4 mr-2"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -145,7 +145,7 @@ export const FileList: React.FC = () => {
               </div>
               <button
                 onClick={() => handleDelete(file.id)}
-                className="text-gray-400 hover:text-white transition-colors duration-200"
+                className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-xl hover:bg-gray-800 shadow-sm shadow-gray-900/50 opacity-0 group-hover:opacity-100"
                 disabled={deleteMutation.isPending}
               >
                 <TrashIcon className="h-5 w-5" />
@@ -159,7 +159,7 @@ export const FileList: React.FC = () => {
 
   return (
     <div className="space-y-4 p-6 bg-black min-h-screen">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 bg-gray-900 p-4 rounded-lg border border-gray-800">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md shadow-gray-900/50">
         {/* Search Box with Type Toggle */}
         <div className="relative flex-1">
           <div className="flex space-x-2">
@@ -169,7 +169,7 @@ export const FileList: React.FC = () => {
               </div>
               <input
                 type="text"
-                className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-10 pr-3 text-sm placeholder-gray-500 text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
+                className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-10 pr-3 text-sm placeholder-gray-500 text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
                 placeholder={`Search ${
                   searchType === "content" ? "inside files" : "filenames"
                 }...`}
@@ -178,7 +178,7 @@ export const FileList: React.FC = () => {
               />
             </div>
             <select
-              className="rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
+              className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
               value={searchType}
               onChange={(e) =>
                 setSearchType(e.target.value as "filename" | "content")
@@ -193,7 +193,7 @@ export const FileList: React.FC = () => {
         {/* Date Filter */}
         <div className="w-full sm:w-48">
           <select
-            className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
+            className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
             value={dateFilter}
             onChange={handleDateFilterChange}
           >
@@ -208,7 +208,7 @@ export const FileList: React.FC = () => {
         {/* Size Filter */}
         <div className="w-full sm:w-48">
           <select
-            className="block w-full rounded-lg border border-gray-800 bg-black py-2 pl-3 pr-10 text-sm text-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-700"
+            className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
             value={sizeFilter}
             onChange={handleSizeFilterChange}
           >
@@ -220,7 +220,7 @@ export const FileList: React.FC = () => {
         </div>
       </div>
 
-      <div className="overflow-hidden bg-black border border-gray-800 rounded-lg">
+      <div className="overflow-hidden bg-black border border-gray-800 rounded-xl shadow-md shadow-gray-900/50">
         {renderContent()}
       </div>
     </div>
