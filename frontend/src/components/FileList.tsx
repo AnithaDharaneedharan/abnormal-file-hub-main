@@ -3,8 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TrashIcon,
   MagnifyingGlassIcon,
-  CalendarIcon,
-  FunnelIcon,
 } from "@heroicons/react/24/solid";
 import { fileService, FileFilterType } from "../services/fileService";
 import { FileType } from "../types/fileTypes";
