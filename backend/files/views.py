@@ -10,6 +10,10 @@ import mimetypes
 import os
 from django.utils import timezone
 from datetime import timedelta
+import logging
+
+# Get an instance of the custom logger
+logger = logging.getLogger('files')
 
 class FileViewSet(viewsets.ModelViewSet):
     serializer_class = FileSerializer
@@ -31,6 +35,13 @@ class FileViewSet(viewsets.ModelViewSet):
         date_filter = self.request.query_params.get('date', None)
         size_filter = self.request.query_params.get('size', None)
         file_type = self.request.query_params.get('type', None)
+
+        # Log filter operations
+        if any([search, date_filter, size_filter, file_type]):
+            logger.info(
+                f"Filtering files with params: search='{search}', type='{search_type}', "
+                f"date='{date_filter}', size='{size_filter}', file_type='{file_type}'"
+            )
 
         # File type filtering
         if file_type:
@@ -104,32 +115,43 @@ class FileViewSet(viewsets.ModelViewSet):
             instance = self.get_object()
             file_path = instance.file.path if instance.file else None
 
+            logger.info(f"Attempting to delete file: {instance.original_filename} (ID: {instance.id})")
+
             # Delete the physical file first
             if file_path and os.path.exists(file_path):
                 try:
                     os.remove(file_path)
+                    logger.info(f"Physical file deleted successfully: {file_path}")
                 except OSError as e:
+                    error_msg = f"Failed to delete physical file: {str(e)}"
+                    logger.error(error_msg)
                     return Response(
-                        {'error': f'Failed to delete file: {str(e)}'},
+                        {'error': error_msg},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
 
             # Delete the database record
             instance.delete()
+            logger.info(f"File record deleted from database: {instance.original_filename}")
 
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
+            error_msg = f"Delete operation failed: {str(e)}"
+            logger.error(error_msg)
             return Response(
-                {'error': f'Delete failed: {str(e)}'},
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def create(self, request, *args, **kwargs):
         file_obj = request.FILES.get('file')
         if not file_obj:
+            logger.warning("Upload attempted without file")
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            logger.info(f"Starting upload process for file: {file_obj.name}")
+
             # Get the original filename as string
             original_filename = os.path.basename(file_obj.name)
 
@@ -142,10 +164,12 @@ class FileViewSet(viewsets.ModelViewSet):
                 file_bytes += chunk
 
             file_hash = sha256.hexdigest()
+            logger.info(f"File hash calculated: {file_hash[:8]}... (truncated)")
 
             # Check if file with same hash already exists
             existing_file = File.objects.filter(file_hash=file_hash).first()
             if existing_file:
+                logger.info(f"Duplicate file detected: {original_filename} matches existing file {existing_file.original_filename}")
                 serializer = self.get_serializer(existing_file)
                 return Response({
                     **serializer.data,
@@ -163,8 +187,9 @@ class FileViewSet(viewsets.ModelViewSet):
                 # Try to guess the type from the filename
                 guessed_type = mimetypes.guess_type(original_filename)[0]
                 file_type = guessed_type or 'application/octet-stream'
+                logger.info(f"File type determined: {file_type}")
 
-            # Create file instance without UUID validation
+            # Create file instance
             file_instance = File.objects.create(
                 file=new_file,
                 original_filename=original_filename,
@@ -173,9 +198,10 @@ class FileViewSet(viewsets.ModelViewSet):
                 file_hash=file_hash
             )
 
-            # Now validate the UUID filename after creation
-            file_instance.full_clean()
-            file_instance.save()
+            logger.info(
+                f"File uploaded successfully: {original_filename} "
+                f"(ID: {file_instance.id}, Size: {len(file_bytes)} bytes, Type: {file_type})"
+            )
 
             serializer = self.get_serializer(file_instance)
             return Response({
@@ -184,10 +210,13 @@ class FileViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            error_msg = f"Upload failed for {file_obj.name if file_obj else 'unknown file'}: {str(e)}"
+            logger.error(error_msg)
             import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return Response(
                 {
-                    'error': f'Upload failed: {str(e)}',
+                    'error': error_msg,
                     'traceback': traceback.format_exc()
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
