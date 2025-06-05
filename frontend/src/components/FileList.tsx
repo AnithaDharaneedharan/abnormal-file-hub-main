@@ -9,9 +9,6 @@ import debounce from "lodash/debounce";
 export const FileList: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchType, setSearchType] = useState<"filename" | "content">(
-    "filename"
-  );
   const [dateFilter, setDateFilter] = useState("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -26,7 +23,6 @@ export const FileList: React.FC = () => {
     queryKey: [
       "files",
       searchTerm,
-      searchType,
       dateFilter,
       sizeFilter,
       typeFilter,
@@ -36,7 +32,6 @@ export const FileList: React.FC = () => {
     queryFn: () =>
       fileService.getFiles({
         search: searchTerm,
-        searchType,
         date: dateFilter,
         size: sizeFilter,
         type: typeFilter,
@@ -188,37 +183,25 @@ export const FileList: React.FC = () => {
 
   return (
     <div className="space-y-4 p-6 bg-black min-h-screen">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md shadow-gray-900/50">
-        {/* Search Box with Type Toggle */}
+      {/* Search Bar */}
+      <div className="flex flex-col sm:flex-row bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md shadow-gray-900/50 mb-4">
         <div className="relative flex-1">
-          <div className="flex space-x-2">
-            <div className="relative flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
-              </div>
-              <input
-                type="text"
-                className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-10 pr-3 text-sm placeholder-gray-500 text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
-                placeholder={`Search ${
-                  searchType === "content" ? "inside files" : "filenames"
-                }...`}
-                onChange={handleSearchChange}
-                defaultValue={searchTerm}
-              />
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-500" />
             </div>
-            <select
-              className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
-              value={searchType}
-              onChange={(e) =>
-                setSearchType(e.target.value as "filename" | "content")
-              }
-            >
-              <option value="filename">Filename</option>
-              <option value="content">Content</option>
-            </select>
+            <input
+              type="text"
+              className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-10 pr-3 text-sm placeholder-gray-500 text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
+              placeholder="Search filenames..."
+              onChange={handleSearchChange}
+              defaultValue={searchTerm}
+            />
           </div>
         </div>
-
+      </div>
+      {/* Filter Bar */}
+      <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md shadow-gray-900/50">
         {/* Date Filter */}
         <div className="flex space-x-2 items-center">
           <select
@@ -251,7 +234,6 @@ export const FileList: React.FC = () => {
             placeholder="End date"
           />
         </div>
-
         {/* Size Filter */}
         <div className="w-full sm:w-48">
           <select
@@ -265,7 +247,6 @@ export const FileList: React.FC = () => {
             <option value="large">Large (&gt; 10MB)</option>
           </select>
         </div>
-
         {/* Type Filter */}
         <div className="w-full sm:w-48">
           <select
@@ -283,7 +264,6 @@ export const FileList: React.FC = () => {
           </select>
         </div>
       </div>
-
       <div className="overflow-hidden bg-black border border-gray-800 rounded-xl shadow-md shadow-gray-900/50">
         {renderContent()}
       </div>
