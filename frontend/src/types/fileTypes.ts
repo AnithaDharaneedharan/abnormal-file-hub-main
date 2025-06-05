@@ -9,24 +9,31 @@ export interface FileUpload {
     errorMessage?: string;
     successMessage?: string;
     fileId?: string; // ID of the uploaded file from the server
+    onProgress?: (progress: number) => void;
 }
 
 export interface FileType {
     id: string;
-    url: string;
-    file: string;
     original_filename: string;
     file_type: string;
     size: number;
     uploaded_at: string;
-    file_hash: string;
+    url: string;
     category: string;
     isDuplicate?: boolean;
-    message?: string;
 }
 
 // Response from the server when uploading a file
-export interface UploadResponse extends FileType {}
+export interface UploadResponse {
+    id: string;
+    original_filename: string;
+    file_type: string;
+    size: number;
+    uploaded_at: string;
+    url: string;
+    category: string;
+    isDuplicate?: boolean;
+}
 
 export interface FileListItem {
     id: string;

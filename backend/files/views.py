@@ -30,13 +30,48 @@ class FileViewSet(viewsets.ModelViewSet):
         search_type = self.request.query_params.get('searchType', 'filename')  # 'filename' or 'content'
         date_filter = self.request.query_params.get('date', None)
         size_filter = self.request.query_params.get('size', None)
+        file_type = self.request.query_params.get('type', None)
+
+        # File type filtering
+        if file_type:
+            if file_type == 'image':
+                queryset = queryset.filter(file_type__startswith='image/')
+            elif file_type == 'document':
+                queryset = queryset.filter(
+                    Q(file_type__in=[
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'text/plain',
+                    ]) |
+                    Q(file_type__startswith='application/vnd.ms-')
+                )
+            elif file_type == 'spreadsheet':
+                queryset = queryset.filter(
+                    Q(file_type__in=[
+                        'text/csv',
+                        'application/vnd.ms-excel',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    ])
+                )
+            elif file_type == 'video':
+                queryset = queryset.filter(file_type__startswith='video/')
+            elif file_type == 'audio':
+                queryset = queryset.filter(file_type__startswith='audio/')
+            elif file_type == 'archive':
+                queryset = queryset.filter(
+                    file_type__in=[
+                        'application/zip',
+                        'application/x-rar-compressed',
+                        'application/x-7z-compressed',
+                        'application/x-tar',
+                        'application/gzip'
+                    ]
+                )
 
         if search and len(search) >= 2:
             if search_type == 'content':
-                queryset = queryset.filter(
-                    Q(content__icontains=search) &
-                    Q(file_type__in=File.SEARCHABLE_TYPES)
-                )
+                queryset = queryset.filter(content__icontains=search)
             else:  # filename search
                 queryset = queryset.filter(
                     Q(original_filename__icontains=search) |
@@ -45,7 +80,6 @@ class FileViewSet(viewsets.ModelViewSet):
 
         if date_filter:
             now = timezone.now()
-
             if date_filter == 'today':
                 queryset = queryset.filter(uploaded_at__date=now.date())
             elif date_filter == 'week':
@@ -56,7 +90,6 @@ class FileViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=365))
 
         if size_filter:
-            # small: < 1MB, medium: 1MB-10MB, large: > 10MB
             if size_filter == 'small':
                 queryset = queryset.filter(size__lt=1024 * 1024)  # < 1MB
             elif size_filter == 'medium':

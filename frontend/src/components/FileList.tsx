@@ -1,7 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-import { fileService } from "../services/fileService";
+import {
+  TrashIcon,
+  MagnifyingGlassIcon,
+  CalendarIcon,
+  FunnelIcon,
+} from "@heroicons/react/24/solid";
+import { fileService, FileFilterType } from "../services/fileService";
 import { FileType } from "../types/fileTypes";
 import { FileIcon } from "./FileIcon";
 import debounce from "lodash/debounce";
@@ -14,19 +19,28 @@ export const FileList: React.FC = () => {
   );
   const [dateFilter, setDateFilter] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState<FileFilterType>(null);
 
   const {
     data: files,
     isLoading,
     error,
   } = useQuery<FileType[]>({
-    queryKey: ["files", searchTerm, searchType, dateFilter, sizeFilter],
+    queryKey: [
+      "files",
+      searchTerm,
+      searchType,
+      dateFilter,
+      sizeFilter,
+      typeFilter,
+    ],
     queryFn: () =>
       fileService.getFiles({
         search: searchTerm,
         searchType,
-        date: dateFilter || undefined,
-        size: sizeFilter || undefined,
+        date: dateFilter,
+        size: sizeFilter,
+        type: typeFilter,
       }),
     enabled: !searchTerm || searchTerm.length >= 2,
   });
@@ -58,12 +72,8 @@ export const FileList: React.FC = () => {
     }
   };
 
-  const handleDateFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setDateFilter(e.target.value);
-  };
-
-  const handleSizeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSizeFilter(e.target.value);
+  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTypeFilter(e.target.value as FileFilterType);
   };
 
   const renderContent = () => {
@@ -191,17 +201,17 @@ export const FileList: React.FC = () => {
         </div>
 
         {/* Date Filter */}
-        <div className="w-full sm:w-48">
+        <div className="flex space-x-2">
           <select
-            className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
+            className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
             value={dateFilter}
-            onChange={handleDateFilterChange}
+            onChange={(e) => setDateFilter(e.target.value)}
           >
-            <option value="">Filter by date</option>
+            <option value="">All time</option>
             <option value="today">Today</option>
-            <option value="week">Last 7 days</option>
-            <option value="month">Last 30 days</option>
-            <option value="year">Last year</option>
+            <option value="week">This week</option>
+            <option value="month">This month</option>
+            <option value="year">This year</option>
           </select>
         </div>
 
@@ -210,12 +220,29 @@ export const FileList: React.FC = () => {
           <select
             className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
             value={sizeFilter}
-            onChange={handleSizeFilterChange}
+            onChange={(e) => setSizeFilter(e.target.value)}
           >
             <option value="">Filter by size</option>
             <option value="small">Small (&lt; 1MB)</option>
             <option value="medium">Medium (1-10MB)</option>
             <option value="large">Large (&gt; 10MB)</option>
+          </select>
+        </div>
+
+        {/* Type Filter */}
+        <div className="w-full sm:w-48">
+          <select
+            className="block w-full rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
+            value={typeFilter || ""}
+            onChange={handleTypeFilterChange}
+          >
+            <option value="">All file types</option>
+            <option value="image">Images</option>
+            <option value="document">Documents</option>
+            <option value="spreadsheet">Spreadsheets</option>
+            <option value="video">Videos</option>
+            <option value="audio">Audio</option>
+            <option value="archive">Archives</option>
           </select>
         </div>
       </div>

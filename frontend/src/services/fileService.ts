@@ -1,12 +1,17 @@
 import { apiClient } from '../api/client';
 import { FileType, UploadResponse, FileUpload } from '../types/fileTypes';
 
+export type FileFilterType = 'image' | 'document' | 'spreadsheet' | 'video' | 'audio' | 'archive' | null;
+
 export const fileService = {
     uploadFile: async (fileUpload: FileUpload, onProgress?: (progress: number) => void): Promise<UploadResponse> => {
         const formData = new FormData();
         formData.append('file', fileUpload.file);
 
         const response = await apiClient.post<UploadResponse>('/files/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.total) {
                     const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -15,10 +20,7 @@ export const fileService = {
             },
         });
 
-        return {
-            ...response.data,
-            isDuplicate: response.data.isDuplicate || false
-        };
+        return response.data;
     },
 
     getFiles: async (params?: {
@@ -26,6 +28,7 @@ export const fileService = {
         date?: string;
         size?: string;
         searchType?: 'filename' | 'content';
+        type?: FileFilterType;
     }): Promise<FileType[]> => {
         const searchParams = new URLSearchParams();
         if (params?.search) {
@@ -40,6 +43,10 @@ export const fileService = {
         if (params?.searchType) {
             searchParams.append('searchType', params.searchType);
         }
+        if (params?.type) {
+            searchParams.append('type', params.type);
+        }
+
         const response = await apiClient.get<FileType[]>('/files/', { params: searchParams });
         return response.data;
     },
