@@ -29,6 +29,8 @@ export const fileService = {
         size?: string;
         searchType?: 'filename' | 'content';
         type?: FileFilterType;
+        startDate?: string;
+        endDate?: string;
     }): Promise<FileType[]> => {
         const searchParams = new URLSearchParams();
         if (params?.search) {
@@ -45,6 +47,12 @@ export const fileService = {
         }
         if (params?.type) {
             searchParams.append('type', params.type);
+        }
+        if (params?.startDate) {
+            searchParams.append('startDate', params.startDate);
+        }
+        if (params?.endDate) {
+            searchParams.append('endDate', params.endDate);
         }
 
         const response = await apiClient.get<FileType[]>('/files/', { params: searchParams });

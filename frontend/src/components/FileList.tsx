@@ -1,9 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  TrashIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/solid";
+import { TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { fileService, FileFilterType } from "../services/fileService";
 import { FileType } from "../types/fileTypes";
 import { FileIcon } from "./FileIcon";
@@ -16,6 +13,8 @@ export const FileList: React.FC = () => {
     "filename"
   );
   const [dateFilter, setDateFilter] = useState("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<FileFilterType>(null);
 
@@ -31,6 +30,8 @@ export const FileList: React.FC = () => {
       dateFilter,
       sizeFilter,
       typeFilter,
+      startDate,
+      endDate,
     ],
     queryFn: () =>
       fileService.getFiles({
@@ -39,6 +40,8 @@ export const FileList: React.FC = () => {
         date: dateFilter,
         size: sizeFilter,
         type: typeFilter,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       }),
     enabled: !searchTerm || searchTerm.length >= 2,
   });
@@ -72,6 +75,24 @@ export const FileList: React.FC = () => {
 
   const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTypeFilter(e.target.value as FileFilterType);
+  };
+
+  const handleDateFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setDateFilter(e.target.value);
+    if (e.target.value) {
+      setStartDate("");
+      setEndDate("");
+    }
+  };
+
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+    if (e.target.value) setDateFilter("");
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(e.target.value);
+    if (e.target.value) setDateFilter("");
   };
 
   const renderContent = () => {
@@ -199,11 +220,11 @@ export const FileList: React.FC = () => {
         </div>
 
         {/* Date Filter */}
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
           <select
             className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 pl-3 pr-10 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
+            onChange={handleDateFilterChange}
           >
             <option value="">All time</option>
             <option value="today">Today</option>
@@ -211,6 +232,24 @@ export const FileList: React.FC = () => {
             <option value="month">This month</option>
             <option value="year">This year</option>
           </select>
+          <span className="text-gray-400 text-xs">or</span>
+          <input
+            type="date"
+            className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 px-3 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
+            value={startDate}
+            onChange={handleStartDateChange}
+            max={endDate || undefined}
+            placeholder="Start date"
+          />
+          <span className="text-gray-400 text-xs">to</span>
+          <input
+            type="date"
+            className="rounded-xl border border-gray-700 bg-gray-900 py-2.5 px-3 text-sm text-white focus:border-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-600 shadow-sm shadow-gray-900/50"
+            value={endDate}
+            onChange={handleEndDateChange}
+            min={startDate || undefined}
+            placeholder="End date"
+          />
         </div>
 
         {/* Size Filter */}

@@ -11,6 +11,7 @@ import os
 from django.utils import timezone
 from datetime import timedelta
 import logging
+from django.utils.dateparse import parse_date
 
 # Get an instance of the custom logger
 logger = logging.getLogger('files')
@@ -35,12 +36,15 @@ class FileViewSet(viewsets.ModelViewSet):
         date_filter = self.request.query_params.get('date', None)
         size_filter = self.request.query_params.get('size', None)
         file_type = self.request.query_params.get('type', None)
+        start_date = self.request.query_params.get('startDate', None)
+        end_date = self.request.query_params.get('endDate', None)
 
         # Log filter operations
-        if any([search, date_filter, size_filter, file_type]):
+        if any([search, date_filter, size_filter, file_type, start_date, end_date]):
             logger.info(
                 f"Filtering files with params: search='{search}', type='{search_type}', "
-                f"date='{date_filter}', size='{size_filter}', file_type='{file_type}'"
+                f"date='{date_filter}', size='{size_filter}', file_type='{file_type}', "
+                f"startDate='{start_date}', endDate='{end_date}'"
             )
 
         # File type filtering
@@ -99,6 +103,16 @@ class FileViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=30))
             elif date_filter == 'year':
                 queryset = queryset.filter(uploaded_at__gte=now - timedelta(days=365))
+
+        # Custom date range filtering
+        if start_date:
+            parsed_start = parse_date(start_date)
+            if parsed_start:
+                queryset = queryset.filter(uploaded_at__date__gte=parsed_start)
+        if end_date:
+            parsed_end = parse_date(end_date)
+            if parsed_end:
+                queryset = queryset.filter(uploaded_at__date__lte=parsed_end)
 
         if size_filter:
             if size_filter == 'small':
