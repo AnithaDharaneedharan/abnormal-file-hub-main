@@ -6,6 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 RUN npm install --save-dev @types/uuid @types/react @types/react-dom @types/node @types/lodash.debounce
+# Install test dependencies
+RUN npm install --save-dev @testing-library/react @testing-library/jest-dom @testing-library/user-event @types/testing-library__react @types/jest @types/testing-library__jest-dom @babel/plugin-proposal-private-property-in-object
 
 # Copy project files
 COPY . .
@@ -13,8 +15,9 @@ COPY . .
 # Set environment for development
 ENV NODE_ENV=development
 ENV WATCHPACK_POLLING=true
+ENV CI=true
 
 EXPOSE 3000
 
-# Start the development server with polling for hot reload in Docker
+# Default command starts the development server
 CMD ["npm", "start"]
