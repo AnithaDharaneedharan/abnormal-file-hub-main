@@ -27,6 +27,7 @@ export const FileList: React.FC = () => {
   const [sizeFilter, setSizeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<FileFilterType>(null);
   const [searchTime, setSearchTime] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const {
     data: response,
@@ -67,6 +68,10 @@ export const FileList: React.FC = () => {
     mutationFn: (fileId: string) => fileService.deleteFile(fileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["files"] });
+      setDeletingId(null);
+    },
+    onError: () => {
+      setDeletingId(null);
     },
   });
 
@@ -86,6 +91,7 @@ export const FileList: React.FC = () => {
 
   const handleDelete = (fileId: string) => {
     if (window.confirm("Are you sure you want to delete this file?")) {
+      setDeletingId(fileId);
       deleteMutation.mutate(fileId);
     }
   };
@@ -148,7 +154,9 @@ export const FileList: React.FC = () => {
         {files.map((file: FileType) => (
           <li
             key={file.id}
-            className="px-6 py-5 sm:px-8 hover:bg-gray-900 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl group"
+            className={`px-6 py-5 sm:px-8 hover:bg-gray-900 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl group ${
+              deletingId === file.id ? "opacity-50" : ""
+            }`}
           >
             <div className="flex items-center">
               <FileIcon category={file.category} />
@@ -172,6 +180,7 @@ export const FileList: React.FC = () => {
                   <button
                     onClick={() => handleDownload(file)}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-xl hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 shadow-sm shadow-gray-900/50"
+                    disabled={deletingId === file.id}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -193,10 +202,20 @@ export const FileList: React.FC = () => {
               </div>
               <button
                 onClick={() => handleDelete(file.id)}
-                className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-xl hover:bg-gray-800 shadow-sm shadow-gray-900/50 opacity-0 group-hover:opacity-100"
-                disabled={deleteMutation.isPending}
+                className={`relative text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-xl hover:bg-gray-800 shadow-sm shadow-gray-900/50 ${
+                  deletingId === file.id
+                    ? "opacity-50 cursor-not-allowed"
+                    : "opacity-0 group-hover:opacity-100"
+                }`}
+                disabled={deletingId === file.id}
               >
-                <TrashIcon className="h-5 w-5" />
+                {deletingId === file.id ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  </div>
+                ) : (
+                  <TrashIcon className="h-5 w-5" />
+                )}
               </button>
             </div>
           </li>
