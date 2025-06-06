@@ -134,6 +134,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Cache Configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'file-hub-cache',
+        'TIMEOUT': 5,  # 5 seconds
+    }
+}
+
+# Cache key prefix to avoid collisions
+CACHE_KEY_PREFIX = 'filehub'
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

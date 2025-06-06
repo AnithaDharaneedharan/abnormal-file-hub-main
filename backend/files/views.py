@@ -13,6 +13,8 @@ from datetime import timedelta
 import logging
 from django.utils.dateparse import parse_date
 import time
+from django.core.cache import cache
+from django.utils.http import urlencode
 
 # Get an instance of the custom logger
 logger = logging.getLogger('files')
@@ -22,16 +24,22 @@ class FileViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser,)
     queryset = File.objects.all()
 
-    def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
-        context = super().get_serializer_context()
-        context['request'] = self.request
-        return context
+    def _get_cache_key(self, params):
+        """Generate a cache key based on request parameters"""
+        sorted_params = urlencode(sorted(params.items()))
+        return f'filelist:{sorted_params}'
 
     def list(self, request, *args, **kwargs):
         start_time = time.time()
+
+        # Generate cache key from request parameters
+        cache_key = self._get_cache_key(request.query_params)
+
+        # Try to get data from cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            logger.info("Serving response from cache")
+            return Response(cached_data)
 
         # Get the queryset
         queryset = self.get_queryset()
@@ -48,7 +56,7 @@ class FileViewSet(viewsets.ModelViewSet):
         # Log the timing information
         logger.info(f"Query executed in {total_time:.2f}ms (Serialization: {serialize_time:.2f}ms)")
 
-        # Include timing information in the response data
+        # Prepare response data
         response_data = {
             'files': data,
             'metrics': {
@@ -56,6 +64,9 @@ class FileViewSet(viewsets.ModelViewSet):
                 'serializeTime': round(serialize_time, 2)
             }
         }
+
+        # Cache the response for 5 minutes
+        cache.set(cache_key, response_data, timeout=300)
 
         return Response(response_data)
 
