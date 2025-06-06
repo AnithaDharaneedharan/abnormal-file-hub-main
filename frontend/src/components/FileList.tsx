@@ -112,10 +112,14 @@ export const FileList: React.FC = () => {
     if (e.target.value) setDateFilter("");
   };
 
+  const handleDownload = (file: FileType) => {
+    window.open(file.url, "_blank");
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex justify-center items-center p-8 bg-black">
+        <div className="flex justify-center items-center h-full p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
       );
@@ -123,7 +127,7 @@ export const FileList: React.FC = () => {
 
     if (error) {
       return (
-        <div className="text-center p-8 text-white bg-black">
+        <div className="flex justify-center items-center h-full p-8 text-white">
           Failed to load files. Please try again.
         </div>
       );
@@ -131,7 +135,7 @@ export const FileList: React.FC = () => {
 
     if (!files?.length) {
       return (
-        <div className="text-center p-8 text-gray-400 bg-black">
+        <div className="flex justify-center items-center h-full p-8 text-gray-400">
           {searchTerm
             ? "No files match your search."
             : "No files uploaded yet."}
@@ -140,7 +144,7 @@ export const FileList: React.FC = () => {
     }
 
     return (
-      <ul className="divide-y divide-gray-800 bg-black">
+      <ul className="divide-y divide-gray-800">
         {files.map((file: FileType) => (
           <li
             key={file.id}
@@ -165,11 +169,9 @@ export const FileList: React.FC = () => {
                   <span>{new Date(file.uploaded_at).toLocaleString()}</span>
                 </div>
                 <div className="mt-2 flex items-center space-x-4">
-                  <a
-                    href={file.url}
+                  <button
+                    onClick={() => handleDownload(file)}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-xl hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 shadow-sm shadow-gray-900/50"
-                    target="_blank"
-                    rel="noopener noreferrer"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +188,7 @@ export const FileList: React.FC = () => {
                       />
                     </svg>
                     Download
-                  </a>
+                  </button>
                 </div>
               </div>
               <button
@@ -221,22 +223,24 @@ export const FileList: React.FC = () => {
             />
           </div>
           {/* Search Performance Metrics */}
-          {searchTime !== null && metrics && fetchStatus === "idle" && (
-            <div className="absolute -bottom-6 left-0 flex items-center space-x-4 text-xs text-gray-400">
-              <div className="flex items-center">
-                <ClockIcon className="h-4 w-4 mr-1" />
-                <span>Total: {searchTime.toFixed(1)}ms</span>
+          <div className="h-6">
+            {searchTime !== null && metrics && fetchStatus === "idle" && (
+              <div className="absolute -bottom-6 left-0 flex items-center space-x-4 text-xs text-gray-400">
+                <div className="flex items-center">
+                  <ClockIcon className="h-4 w-4 mr-1" />
+                  <span>Total: {searchTime.toFixed(1)}ms</span>
+                </div>
+                <div className="flex items-center">
+                  <span>Server Query: {metrics.queryTime.toFixed(1)}ms</span>
+                </div>
+                <div className="flex items-center">
+                  <span>
+                    Server Serialize: {metrics.serializeTime.toFixed(1)}ms
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center">
-                <span>Server Query: {metrics.queryTime.toFixed(1)}ms</span>
-              </div>
-              <div className="flex items-center">
-                <span>
-                  Server Serialize: {metrics.serializeTime.toFixed(1)}ms
-                </span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       {/* Filter Bar */}
@@ -303,8 +307,9 @@ export const FileList: React.FC = () => {
           </select>
         </div>
       </div>
+      {/* List Container with fixed minimum height */}
       <div className="overflow-hidden bg-black border border-gray-800 rounded-xl shadow-md shadow-gray-900/50">
-        {renderContent()}
+        <div className="min-h-[400px]">{renderContent()}</div>
       </div>
     </div>
   );
