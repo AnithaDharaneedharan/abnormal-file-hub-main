@@ -118,8 +118,22 @@ export const FileList: React.FC = () => {
     if (e.target.value) setDateFilter("");
   };
 
-  const handleDownload = (file: FileType) => {
-    window.open(file.url, "_blank");
+  const handleDownload = async (file: FileType) => {
+    try {
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.original_filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download file. Please try again.");
+    }
   };
 
   const renderContent = () => {

@@ -13,6 +13,9 @@ from datetime import timedelta
 import logging
 from django.utils.dateparse import parse_date
 import time
+from rest_framework.decorators import action
+from django.http import FileResponse
+from urllib.parse import quote
 
 # Get an instance of the custom logger
 logger = logging.getLogger('files')
@@ -29,6 +32,36 @@ class FileViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        """
+        Download endpoint that serves the file with its original filename
+        """
+        instance = self.get_object()
+        if not instance.file:
+            return Response(
+                {'error': 'File not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Open the file and create a FileResponse
+        file_path = instance.file.path
+        if not os.path.exists(file_path):
+            return Response(
+                {'error': 'File not found on disk'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # URL encode the filename to handle special characters
+        encoded_filename = quote(instance.original_filename)
+
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type=instance.file_type or 'application/octet-stream'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{encoded_filename}"'
+        return response
 
     def list(self, request, *args, **kwargs):
         start_time = time.time()
