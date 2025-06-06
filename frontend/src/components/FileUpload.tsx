@@ -1,10 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowUpTrayIcon,
-  TrashIcon,
-  CheckCircleIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/solid";
 import { fileService } from "../services/fileService";
 import {
   FileUpload as FileUploadType,
@@ -73,25 +69,6 @@ export const FileUpload: React.FC = () => {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (fileId: string) => fileService.deleteFile(fileId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-      setCurrentUpload(null);
-    },
-    onError: (error) => {
-      setCurrentUpload((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "error",
-              errorMessage: "Failed to delete file. Please try again.",
-            }
-          : null
-      );
-    },
-  });
-
   const createFileUpload = (file: File): FileUploadType => ({
     id: uuidv4(),
     file,
@@ -137,15 +114,6 @@ export const FileUpload: React.FC = () => {
       }
     },
     [uploadMutation]
-  );
-
-  const handleDelete = useCallback(
-    (fileId: string) => {
-      if (fileId) {
-        deleteMutation.mutate(fileId);
-      }
-    },
-    [deleteMutation]
   );
 
   return (
@@ -249,42 +217,35 @@ export const FileUpload: React.FC = () => {
             {(currentUpload?.status === "error" ||
               currentUpload?.status === "completed" ||
               currentUpload?.status === "success") && (
-              <div className="mt-2">
-                <div
-                  className={`text-sm flex items-center justify-center ${
-                    currentUpload.status === "error"
-                      ? "text-gray-200"
-                      : currentUpload.status === "success"
-                      ? "text-white"
-                      : "text-gray-300"
-                  }`}
-                >
-                  {currentUpload.status === "success" && (
-                    <CheckCircleIcon className="h-5 w-5 mr-1" />
-                  )}
-                  {currentUpload.status === "success"
-                    ? currentUpload.successMessage
-                    : currentUpload.errorMessage}
-                </div>
-                <div className="mt-2 flex justify-center space-x-2">
-                  <button
-                    onClick={() => setCurrentUpload(null)}
-                    className="text-sm text-gray-400 hover:text-white underline transition-colors duration-200"
-                  >
-                    {currentUpload.status === "success"
-                      ? "Upload another file"
-                      : "Try another file"}
-                  </button>
-                  {currentUpload.fileId && (
+              <div className="mt-4">
+                <div className="flex items-center justify-center space-x-4">
+                  <div className="text-sm">
+                    {currentUpload.status === "error" && (
+                      <p className="text-red-500">
+                        {currentUpload.errorMessage}
+                      </p>
+                    )}
+                    {currentUpload.status === "completed" && (
+                      <p className="text-yellow-500">
+                        {currentUpload.errorMessage}
+                      </p>
+                    )}
+                    {currentUpload.status === "success" && (
+                      <p className="text-green-500">
+                        {currentUpload.successMessage}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-4">
                     <button
-                      onClick={() => handleDelete(currentUpload.fileId!)}
-                      className="inline-flex items-center text-sm text-gray-400 hover:text-white transition-colors duration-200"
-                      disabled={deleteMutation.isPending}
+                      onClick={() => setCurrentUpload(null)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-700 text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors duration-200 shadow-sm shadow-gray-900/50"
                     >
-                      <TrashIcon className="h-4 w-4 mr-1" />
-                      {deleteMutation.isPending ? "Deleting..." : "Delete file"}
+                      {currentUpload.status === "error"
+                        ? "Try again"
+                        : "Upload another file"}
                     </button>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
