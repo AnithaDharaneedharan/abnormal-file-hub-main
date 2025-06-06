@@ -1,226 +1,149 @@
-# Abnormal File Vault
+# File Hub
 
-A full-stack file management application built with React and Django, designed for efficient file handling and storage.
+A modern, full-stack file management application built with Django and React. This application provides a robust and user-friendly interface for uploading, downloading, and managing files with advanced features like duplicate detection, file categorization, and search capabilities.
 
-## 🚀 Technology Stack
+## Features
 
-### Backend
-- Django 4.x (Python web framework)
-- Django REST Framework (API development)
-- SQLite (Development database)
-- Gunicorn (WSGI HTTP Server)
-- WhiteNoise (Static file serving)
+### File Management
+- Upload files with progress tracking
+- Download files with original filenames preserved
+- Delete files with visual feedback
+- Automatic file type detection and categorization
+- Duplicate file detection using SHA-256 hashing
+- Support for various file types (documents, images, videos, etc.)
 
-### Frontend
-- React 18 with TypeScript
-- TanStack Query (React Query) for data fetching
-- Axios for API communication
+### Search and Filtering
+- Search files by filename or content
+- Filter files by type (document, image, spreadsheet, etc.)
+- Filter files by date (today, this week, this month, this year)
+- Custom date range filtering
+- Real-time search with performance metrics
+
+### User Interface
+- Modern, responsive design
+- Drag and drop file upload
+- Upload progress indication
+- Loading states and error handling
+- Clean and intuitive layout
+- Cumulative Layout Shift (CLS) optimization
+
+### Performance
+- Efficient file handling with chunked uploads
+- Optimized database queries with proper indexing
+- File deduplication to save storage space
+- Caching and query optimization
+- Performance metrics tracking
+
+## Tech Stack
+
+### Backend (Django)
+- Django REST Framework for API
+- PostgreSQL for database
+- Custom file storage handling
+- Advanced file type detection
+- Comprehensive logging
+
+### Frontend (React)
+- React with TypeScript
+- TanStack Query for data fetching
 - Tailwind CSS for styling
-- Heroicons for UI elements
+- Heroicons for icons
+- Modern React patterns and hooks
 
-### Infrastructure
-- Docker and Docker Compose
-- Local file storage with volume mounting
+## Setup
 
-## 📋 Prerequisites
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL
+- Virtual environment (recommended)
 
-Before you begin, ensure you have installed:
-- Docker (20.10.x or higher) and Docker Compose (2.x or higher)
-- Node.js (18.x or higher) - for local development
-- Python (3.9 or higher) - for local development
-
-## 🛠️ Installation & Setup
-
-### Using Docker (Recommended)
-
-```bash
-docker-compose up --build
-```
-
-### Local Development Setup
-
-#### Backend Setup
-1. **Create and activate virtual environment**
+### Backend Setup
+1. Create and activate a virtual environment:
    ```bash
-   cd backend
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-2. **Install dependencies**
+2. Install dependencies:
    ```bash
+   cd backend
    pip install -r requirements.txt
    ```
 
-3. **Create necessary directories**
+3. Set up environment variables:
    ```bash
-   mkdir -p media staticfiles data
+   cp .env.example .env
+   # Edit .env with your database and other configuration
    ```
 
-4. **Run migrations**
+4. Run migrations:
    ```bash
    python manage.py migrate
    ```
 
-5. **Start the development server**
+5. Start the development server:
    ```bash
    python manage.py runserver
    ```
 
-#### Frontend Setup
-1. **Install dependencies**
+### Frontend Setup
+1. Install dependencies:
    ```bash
    cd frontend
    npm install
    ```
 
-2. **Create environment file**
-   Create `.env.local`:
-   ```
-   REACT_APP_API_URL=http://localhost:8000/api
-   ```
-
-3. **Start development server**
+2. Set up environment variables:
    ```bash
-   npm start
+   cp .env.example .env
+   # Edit .env with your API endpoint
    ```
 
-## 🌐 Accessing the Application
-
-- Frontend Application: http://localhost:3000
-- Backend API: http://localhost:8000/api
-
-## 📝 API Documentation
-
-### File Management Endpoints
-
-#### List Files
-- **GET** `/api/files/`
-- Returns a list of all uploaded files
-- Response includes file metadata (name, size, type, upload date)
-
-#### Upload File
-- **POST** `/api/files/`
-- Upload a new file
-- Request: Multipart form data with 'file' field
-- Returns: File metadata including ID and upload status
-
-#### Get File Details
-- **GET** `/api/files/<file_id>/`
-- Retrieve details of a specific file
-- Returns: Complete file metadata
-
-#### Delete File
-- **DELETE** `/api/files/<file_id>/`
-- Remove a file from the system
-- Returns: 204 No Content on success
-
-#### Download File
-- Access file directly through the file URL provided in metadata
-
-## 🗄️ Project Structure
-
-```
-file-hub/
-├── backend/                # Django backend
-│   ├── files/             # Main application
-│   │   ├── models.py      # Data models
-│   │   ├── views.py       # API views
-│   │   ├── urls.py        # URL routing
-│   │   └── serializers.py # Data serialization
-│   ├── core/              # Project settings
-│   └── requirements.txt   # Python dependencies
-├── frontend/              # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # API services
-│   │   └── types/         # TypeScript types
-│   └── package.json      # Node.js dependencies
-└── docker-compose.yml    # Docker composition
-```
-
-## 🔧 Development Features
-
-- Hot reloading for both frontend and backend
-- React Query DevTools for debugging data fetching
-- TypeScript for better development experience
-- Tailwind CSS for rapid UI development
-
-## 🐛 Troubleshooting
-
-1. **Port Conflicts**
+3. Start the development server:
    ```bash
-   # If ports 3000 or 8000 are in use, modify docker-compose.yml or use:
-   # Frontend: npm start -- --port 3001
-   # Backend: python manage.py runserver 8001
+   npm run dev
    ```
 
-2. **File Upload Issues**
-   - Maximum file size: 10MB
-   - Ensure proper permissions on media directory
-   - Check network tab for detailed error messages
+## Usage
 
-3. **Database Issues**
-   ```bash
-   # Reset database
-   rm backend/data/db.sqlite3
-   python manage.py migrate
-   ```
+### File Upload
+1. Drag and drop files into the upload area or click to select files
+2. Watch the upload progress in real-time
+3. Receive immediate feedback on successful uploads or duplicates
 
-# Project Submission Instructions
+### File Management
+1. View all files in the main dashboard
+2. Use the search bar to find specific files
+3. Filter files by type using the dropdown menu
+4. Filter files by date range using the date picker
+5. Download files by clicking the download button
+6. Delete files using the trash icon
 
-## Preparing Your Submission
+### Search and Filtering
+1. Use the search bar for filename or content search
+2. Select file types from the dropdown to filter by type
+3. Use date filters for quick time-based filtering
+4. Set custom date ranges for specific time periods
 
-1. Before creating your submission zip file, ensure:
-   - All features are implemented and working as expected
-   - All tests are passing
-   - The application runs successfully locally
-   - Remove any unnecessary files or dependencies
-   - Clean up any debug/console logs
+## API Endpoints
 
-2. Create the submission zip file:
-   ```bash
-   # Activate your backend virtual environment first
-   cd backend
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
-   # Run the submission script from the project root
-   cd ..
-   python create_submission_zip.py
-   ```
+### Files
+- `GET /api/files/` - List all files
+- `POST /api/files/` - Upload a new file
+- `GET /api/files/{id}/` - Get file details
+- `DELETE /api/files/{id}/` - Delete a file
+- `GET /api/files/{id}/download/` - Download a file
 
-   The script will:
-   - Create a zip file named `username_YYYYMMDD.zip` (e.g., `johndoe_20240224.zip`)
-   - Respect .gitignore rules to exclude unnecessary files
-   - Preserve file timestamps
-   - Show you a list of included files and total size
-   - Warn you if the zip is unusually large
+## Contributing
 
-3. Verify your submission zip file:
-   - Extract the zip file to a new directory
-   - Ensure all necessary files are included
-   - Verify that no unnecessary files (like node_modules, __pycache__, etc.) are included
-   - Test the application from the extracted files to ensure everything works
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## Video Documentation Requirement
+## License
 
-**Video Guidance** - Record a screen share demonstrating:
-- How you leveraged Gen AI to help build the features
-- Your prompting techniques and strategies
-- Any challenges you faced and how you overcame them
-- Your thought process in using AI effectively
-
-**IMPORTANT**: Please do not provide a demo of the application functionality. Focus only on your Gen AI usage and approach.
-
-## Submission Process
-
-1. Submit your project through this Google Form:
-   [Project Submission Form](https://forms.gle/nr6DZAX3nv6r7bru9)
-
-2. The form will require:
-   - Your project zip file (named `username_YYYYMMDD.zip`)
-   - Your video documentation
-   - Any additional notes or comments about your implementation
-
-Make sure to test the zip file and video before submitting to ensure they are complete and working as expected.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
