@@ -1,10 +1,22 @@
 import React, { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import {
+  TrashIcon,
+  MagnifyingGlassIcon,
+  ClockIcon,
+} from "@heroicons/react/24/solid";
 import { fileService, FileFilterType } from "../services/fileService";
 import { FileType } from "../types/fileTypes";
 import { FileIcon } from "./FileIcon";
 import debounce from "lodash/debounce";
+
+type FileResponse = {
+  files: FileType[];
+  metrics: {
+    queryTime: number;
+    serializeTime: number;
+  };
+};
 
 export const FileList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -14,12 +26,14 @@ export const FileList: React.FC = () => {
   const [endDate, setEndDate] = useState<string>("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<FileFilterType>(null);
+  const [searchTime, setSearchTime] = useState<number | null>(null);
 
   const {
-    data: files,
+    data: response,
     isLoading,
     error,
-  } = useQuery<FileType[]>({
+    fetchStatus,
+  } = useQuery<FileResponse, Error>({
     queryKey: [
       "files",
       searchTerm,
@@ -29,17 +43,25 @@ export const FileList: React.FC = () => {
       startDate,
       endDate,
     ],
-    queryFn: () =>
-      fileService.getFiles({
+    queryFn: async () => {
+      const startTime = performance.now();
+      const result = await fileService.getFiles({
         search: searchTerm,
         date: dateFilter,
         size: sizeFilter,
         type: typeFilter,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-      }),
+      });
+      const endTime = performance.now();
+      setSearchTime(endTime - startTime);
+      return result;
+    },
     enabled: !searchTerm || searchTerm.length >= 2,
   });
+
+  const files = response?.files || [];
+  const metrics = response?.metrics;
 
   const deleteMutation = useMutation({
     mutationFn: (fileId: string) => fileService.deleteFile(fileId),
@@ -119,7 +141,7 @@ export const FileList: React.FC = () => {
 
     return (
       <ul className="divide-y divide-gray-800 bg-black">
-        {files.map((file) => (
+        {files.map((file: FileType) => (
           <li
             key={file.id}
             className="px-6 py-5 sm:px-8 hover:bg-gray-900 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl group"
@@ -198,6 +220,23 @@ export const FileList: React.FC = () => {
               defaultValue={searchTerm}
             />
           </div>
+          {/* Search Performance Metrics */}
+          {searchTime !== null && metrics && fetchStatus === "idle" && (
+            <div className="absolute -bottom-6 left-0 flex items-center space-x-4 text-xs text-gray-400">
+              <div className="flex items-center">
+                <ClockIcon className="h-4 w-4 mr-1" />
+                <span>Total: {searchTime.toFixed(1)}ms</span>
+              </div>
+              <div className="flex items-center">
+                <span>Server Query: {metrics.queryTime.toFixed(1)}ms</span>
+              </div>
+              <div className="flex items-center">
+                <span>
+                  Server Serialize: {metrics.serializeTime.toFixed(1)}ms
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       {/* Filter Bar */}

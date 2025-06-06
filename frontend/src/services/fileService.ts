@@ -31,7 +31,7 @@ export const fileService = {
         type?: FileFilterType;
         startDate?: string;
         endDate?: string;
-    }): Promise<FileType[]> => {
+    }): Promise<{ files: FileType[], metrics: { queryTime: number, serializeTime: number } }> => {
         const searchParams = new URLSearchParams();
         if (params?.search) {
             searchParams.append('search', params.search);
@@ -55,7 +55,11 @@ export const fileService = {
             searchParams.append('endDate', params.endDate);
         }
 
-        const response = await apiClient.get<FileType[]>('/files/', { params: searchParams });
+        const response = await apiClient.get<{
+            files: FileType[],
+            metrics: { queryTime: number, serializeTime: number }
+        }>('/files/', { params: searchParams });
+
         return response.data;
     },
 

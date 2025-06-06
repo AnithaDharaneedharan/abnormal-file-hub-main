@@ -146,21 +146,21 @@ REST_FRAMEWORK = {
     ],
 }
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+# CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Headers that can be exposed to the frontend
+CORS_EXPOSE_HEADERS = [
+    'x-query-time',
+    'x-serialize-time',
 ]
+
+# Headers that are allowed in requests
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',

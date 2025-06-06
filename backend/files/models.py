@@ -6,6 +6,9 @@ import uuid
 import os
 import re
 import logging
+from django.db.models import Q
+from django.utils import timezone
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,15 @@ class File(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     file_hash = models.CharField(max_length=64, blank=True, null=True)
     category = models.CharField(max_length=50, blank=True)
+    content = models.TextField(null=True, blank=True)
+
     class Meta:
+        indexes = [
+            models.Index(fields=['original_filename']),
+            models.Index(fields=['file_type']),
+            models.Index(fields=['uploaded_at']),
+            models.Index(fields=['size']),
+        ]
         ordering = ['-uploaded_at']
 
     def __str__(self):
@@ -87,3 +98,87 @@ class File(models.Model):
     def stored_filename(self):
         """Get the UUID-based filename without path"""
         return os.path.basename(self.file.name) if self.file else None
+
+    @classmethod
+    def search(cls, **kwargs):
+        """
+        Advanced search method that efficiently uses database indexes.
+        """
+        queryset = cls.objects.all()
+
+        # Text search
+        search_term = kwargs.get('search')
+        search_type = kwargs.get('search_type', 'filename')
+
+        if search_term and len(search_term) >= 2:
+            if search_type == 'content':
+                queryset = queryset.filter(content__icontains=search_term)
+            else:
+                # Use trigram similarity for better filename search if available
+                queryset = queryset.filter(
+                    Q(original_filename__icontains=search_term) |
+                    Q(file_type__icontains=search_term)
+                )
+
+        # File type filtering
+        file_type = kwargs.get('type')
+        if file_type:
+            type_filters = {
+                'image': Q(file_type__startswith='image/'),
+                'document': Q(file_type__in=[
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'text/plain',
+                ]) | Q(file_type__startswith='application/vnd.ms-'),
+                'spreadsheet': Q(file_type__in=[
+                    'text/csv',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                ]),
+                'video': Q(file_type__startswith='video/'),
+                'audio': Q(file_type__startswith='audio/'),
+                'archive': Q(file_type__in=[
+                    'application/zip',
+                    'application/x-rar-compressed',
+                    'application/x-7z-compressed',
+                    'application/x-tar',
+                    'application/gzip'
+                ])
+            }
+            if file_type in type_filters:
+                queryset = queryset.filter(type_filters[file_type])
+
+        # Date filtering
+        date_filter = kwargs.get('date')
+        if date_filter:
+            now = timezone.now()
+            date_filters = {
+                'today': Q(uploaded_at__date=now.date()),
+                'week': Q(uploaded_at__gte=now - timedelta(days=7)),
+                'month': Q(uploaded_at__gte=now - timedelta(days=30)),
+                'year': Q(uploaded_at__gte=now - timedelta(days=365))
+            }
+            if date_filter in date_filters:
+                queryset = queryset.filter(date_filters[date_filter])
+
+        # Custom date range
+        start_date = kwargs.get('start_date')
+        end_date = kwargs.get('end_date')
+        if start_date:
+            queryset = queryset.filter(uploaded_at__date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(uploaded_at__date__lte=end_date)
+
+        # Size filtering
+        size_filter = kwargs.get('size')
+        if size_filter:
+            size_filters = {
+                'small': Q(size__lt=1024 * 1024),  # < 1MB
+                'medium': Q(size__gte=1024 * 1024, size__lt=10 * 1024 * 1024),  # 1-10MB
+                'large': Q(size__gte=10 * 1024 * 1024)  # > 10MB
+            }
+            if size_filter in size_filters:
+                queryset = queryset.filter(size_filters[size_filter])
+
+        return queryset
