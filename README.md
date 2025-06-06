@@ -149,4 +149,3 @@ Run the command `docker compose up --build` and the application will boot on `ht
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-

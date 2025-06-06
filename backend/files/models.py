@@ -13,7 +13,20 @@ from datetime import timedelta
 logger = logging.getLogger(__name__)
 
 def validate_uuid_filename(filename):
-    """Validate that filename follows UUID pattern"""
+    """Validate that filename follows UUID pattern.
+
+    Args:
+        filename (str or FieldFile): The filename to validate. Can be a string or a FieldFile object.
+
+    Raises:
+        ValidationError: If the filename is invalid, None, empty, or doesn't match UUID pattern.
+
+    Example:
+        >>> validate_uuid_filename("123e4567-e89b-12d3-a456-426614174000.jpg")
+        # Valid filename, no exception raised
+        >>> validate_uuid_filename("invalid.jpg")
+        # Raises ValidationError
+    """
     logger.info(f"Validating filename: {filename!r}")
 
     if hasattr(filename, 'name'):  # Handle FieldFile objects
@@ -57,6 +70,29 @@ def file_upload_path(instance, filename):
     return os.path.join('uploads', new_filename)
 
 class File(models.Model):
+    """File model for storing uploaded files with deduplication support.
+
+    This model handles file storage with deduplication based on SHA-256 hashing.
+    It supports various file types and includes metadata like size, type, and upload date.
+
+    Attributes:
+        id (UUIDField): Primary key, auto-generated UUID
+        file (FileField): The actual file stored on disk
+        original_filename (str): Original name of the uploaded file
+        file_type (str): MIME type of the file
+        size (int): File size in bytes
+        uploaded_at (datetime): Timestamp of upload
+        file_hash (str): SHA-256 hash for deduplication
+        category (str): File category based on type
+        content (str): Optional text content for searchable files
+
+    Indexes:
+        - original_filename
+        - file_type
+        - uploaded_at
+        - size
+    """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(
         upload_to=file_upload_path,
@@ -83,19 +119,30 @@ class File(models.Model):
         return self.original_filename
 
     def clean(self):
-        """Additional model validation"""
+        """Additional model validation.
+
+        Validates UUID filename format for existing files.
+        Called automatically during model.full_clean().
+
+        Raises:
+            ValidationError: If file validation fails
+        """
         super().clean()
-        if self.file and not self._state.adding:  # Only validate for updates, not creation
-            # Validate filename
+        if self.file and not self._state.adding:
             validate_uuid_filename(self.file.name)
 
     def save(self, *args, validate_uuid=True, **kwargs):
-        """
-        Save the model instance.
+        """Save the model instance with optional UUID validation.
 
         Args:
             validate_uuid (bool): Whether to validate UUID filename format.
                                 Set to False during initial file upload.
+            *args: Additional positional arguments for model.save()
+            **kwargs: Additional keyword arguments for model.save()
+
+        Note:
+            Automatically determines file category from MIME type
+            and updates file_type field.
         """
         if validate_uuid:
             self.full_clean()
@@ -112,18 +159,42 @@ class File(models.Model):
 
     @property
     def filename(self):
-        """Get the current filename on disk"""
+        """Get the current filename on disk.
+
+        Returns:
+            str or None: Basename of the file on disk, or None if no file
+        """
         return os.path.basename(self.file.name) if self.file else None
 
     @property
     def stored_filename(self):
-        """Get the UUID-based filename without path"""
+        """Get the UUID-based filename without path.
+
+        Returns:
+            str or None: UUID-based filename without path, or None if no file
+        """
         return os.path.basename(self.file.name) if self.file else None
 
     @classmethod
     def search(cls, **kwargs):
-        """
-        Advanced search method that efficiently uses database indexes.
+        """Advanced search method that efficiently uses database indexes.
+
+        Args:
+            **kwargs: Search parameters
+                search (str): Text to search in filename or content
+                search_type (str): Type of search ('filename' or 'content')
+                type (str): File type filter
+                date (str): Date filter ('today', 'week', 'month', 'year')
+                size (str): Size filter ('small', 'medium', 'large')
+                start_date (date): Start date for custom range
+                end_date (date): End date for custom range
+
+        Returns:
+            QuerySet: Filtered queryset of File objects
+
+        Example:
+            >>> File.search(search='document', type='pdf', date='month')
+            <QuerySet [<File: document.pdf>, ...]>
         """
         queryset = cls.objects.all()
 

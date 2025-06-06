@@ -21,13 +21,30 @@ from urllib.parse import quote
 logger = logging.getLogger('files')
 
 class FileViewSet(viewsets.ModelViewSet):
+    """ViewSet for handling file operations.
+
+    This ViewSet provides CRUD operations for files with additional features:
+    - File deduplication using SHA-256 hashing
+    - Progress tracking during uploads
+    - Automatic file type detection
+    - File categorization
+    - Advanced search and filtering
+
+    Attributes:
+        serializer_class: Serializer for File model
+        parser_classes: Supported request parsers (MultiPartParser for file uploads)
+        queryset: Base queryset for File objects
+    """
+
     serializer_class = FileSerializer
     parser_classes = (MultiPartParser,)
     queryset = File.objects.all()
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
+        """Extra context provided to the serializer class.
+
+        Returns:
+            dict: Context dictionary containing the request object
         """
         context = super().get_serializer_context()
         context['request'] = self.request
@@ -154,6 +171,27 @@ class FileViewSet(viewsets.ModelViewSet):
             )
 
     def create(self, request, *args, **kwargs):
+        """Handle file upload with deduplication check.
+
+        Processes file upload, calculates SHA-256 hash, checks for duplicates,
+        and stores the file if it's unique.
+
+        Args:
+            request: HTTP request containing the file in request.FILES
+            *args: Additional positional arguments
+            **kwargs: Additional keyword arguments
+
+        Returns:
+            Response: JSON response containing:
+                - File metadata
+                - isDuplicate flag
+                - Success/error message
+                - File ID
+
+        Raises:
+            400 Bad Request: If no file is provided
+            500 Internal Server Error: If file processing fails
+        """
         file_obj = request.FILES.get('file')
         if not file_obj:
             logger.warning("Upload attempted without file")

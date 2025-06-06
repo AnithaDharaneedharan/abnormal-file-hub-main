@@ -8,13 +8,32 @@ import {
 } from "../types/fileTypes";
 import { v4 as uuidv4 } from "uuid";
 
-// CSS Animation for the border
+/**
+ * CSS Animation for the border.
+ * Defines a dash animation for the upload area border.
+ */
 const borderAnimation = `@keyframes dash {
     to {
         stroke-dashoffset: -20;
     }
 }`;
 
+/**
+ * FileUpload Component
+ *
+ * A React component that handles file uploads with the following features:
+ * - Drag and drop file upload
+ * - Upload progress tracking
+ * - Duplicate file detection
+ * - Error handling
+ * - Visual feedback for upload states
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <FileUpload />
+ * ```
+ */
 export const FileUpload: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [currentUpload, setCurrentUpload] = useState<FileUploadType | null>(
@@ -22,6 +41,10 @@ export const FileUpload: React.FC = () => {
   );
   const queryClient = useQueryClient();
 
+  /**
+   * Mutation hook for handling file uploads
+   * Manages the upload process, progress tracking, and response handling
+   */
   const uploadMutation = useMutation<UploadResponse, Error, FileUploadType>({
     mutationFn: (fileUpload) => {
       return fileService.uploadFile(fileUpload, (progress) => {
@@ -69,6 +92,12 @@ export const FileUpload: React.FC = () => {
     },
   });
 
+  /**
+   * Creates a new FileUpload object from a File
+   *
+   * @param file - The file to be uploaded
+   * @returns FileUploadType object with generated ID and metadata
+   */
   const createFileUpload = (file: File): FileUploadType => ({
     id: uuidv4(),
     file,
@@ -79,16 +108,32 @@ export const FileUpload: React.FC = () => {
     progress: 0,
   });
 
+  /**
+   * Handles the drag over event for file upload
+   *
+   * @param e - React drag event
+   */
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   }, []);
 
+  /**
+   * Handles the drag leave event for file upload
+   *
+   * @param e - React drag event
+   */
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
   }, []);
 
+  /**
+   * Handles the file drop event
+   * Processes the dropped file and initiates upload
+   *
+   * @param e - React drop event
+   */
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -104,6 +149,11 @@ export const FileUpload: React.FC = () => {
     [uploadMutation]
   );
 
+  /**
+   * Handles file selection from the file input
+   *
+   * @param e - React change event from file input
+   */
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;

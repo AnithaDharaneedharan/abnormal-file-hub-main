@@ -3,7 +3,19 @@ import { FileType, UploadResponse, FileUpload } from '../types/fileTypes';
 
 export type FileFilterType = 'image' | 'document' | 'spreadsheet' | 'video' | 'audio' | 'archive' | null;
 
+/**
+ * File Service
+ * Handles all file-related API calls to the backend
+ */
 export const fileService = {
+    /**
+     * Upload a file to the server with progress tracking
+     *
+     * @param fileUpload - File upload object containing file and metadata
+     * @param onProgress - Callback function to track upload progress
+     * @returns Promise resolving to upload response
+     * @throws Error if upload fails
+     */
     uploadFile: async (fileUpload: FileUpload, onProgress?: (progress: number) => void): Promise<UploadResponse> => {
         const formData = new FormData();
         formData.append('file', fileUpload.file);
@@ -23,6 +35,12 @@ export const fileService = {
         return response.data;
     },
 
+    /**
+     * Fetch all files from the server
+     *
+     * @returns Promise resolving to array of files
+     * @throws Error if fetch fails
+     */
     getFiles: async (params?: {
         search?: string;
         date?: string;
