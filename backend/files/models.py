@@ -14,16 +14,37 @@ logger = logging.getLogger(__name__)
 
 def validate_uuid_filename(filename):
     """Validate that filename follows UUID pattern"""
+    logger.info(f"Validating filename: {filename!r}")
+
     if hasattr(filename, 'name'):  # Handle FieldFile objects
         filename = filename.name
+        logger.info(f"Got filename from FieldFile: {filename!r}")
 
-    if not filename:
-        return
+    if filename is None:
+        logger.info("Filename is None")
+        raise ValidationError('Filename cannot be None')
+
+    if not isinstance(filename, str):
+        logger.info(f"Filename is not a string, got {type(filename)}")
+        raise ValidationError('Filename must be a string')
+
+    if not filename.strip():
+        logger.info("Filename is empty or whitespace")
+        raise ValidationError('Filename cannot be empty')
+
+    basename = os.path.basename(filename).lower()
+    logger.info(f"Basename: {basename!r}")
+
+    if not basename:
+        logger.info("Basename is empty")
+        raise ValidationError('Invalid filename format')
 
     pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[a-z0-9]+$'
-    basename = os.path.basename(str(filename)).lower()
     if not re.match(pattern, basename):
+        logger.info(f"Basename {basename!r} does not match UUID pattern")
         raise ValidationError('Filename must be a UUID with extension')
+
+    logger.info("Filename validation passed")
 
 def file_upload_path(instance, filename):
     """Generate file path for new file upload"""
