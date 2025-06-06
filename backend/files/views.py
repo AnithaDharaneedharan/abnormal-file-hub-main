@@ -1,6 +1,8 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import action
+from django.http import FileResponse, Http404
 from django.db.models import Q
 from .models import File
 from .serializers import FileSerializer
@@ -13,8 +15,6 @@ from datetime import timedelta
 import logging
 from django.utils.dateparse import parse_date
 import time
-from django.core.cache import cache
-from django.utils.http import urlencode
 
 # Get an instance of the custom logger
 logger = logging.getLogger('files')
@@ -24,22 +24,61 @@ class FileViewSet(viewsets.ModelViewSet):
     parser_classes = (MultiPartParser,)
     queryset = File.objects.all()
 
-    def _get_cache_key(self, params):
-        """Generate a cache key based on request parameters"""
-        sorted_params = urlencode(sorted(params.items()))
-        return f'filelist:{sorted_params}'
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    @action(detail=True, methods=['get'], url_path='download')
+    def download(self, request, pk=None):
+        """
+        Download a file.
+        """
+        try:
+            instance = self.get_object()
+            if not instance.file:
+                logger.error(f"File not found on disk: {instance.original_filename}")
+                raise Http404("File not found")
+
+            file_path = instance.file.path
+            if not os.path.exists(file_path):
+                logger.error(f"Physical file missing: {file_path}")
+                raise Http404("File not found")
+
+            # Get the content type
+            content_type, _ = mimetypes.guess_type(instance.original_filename)
+            if not content_type:
+                content_type = 'application/octet-stream'
+
+            # Open the file and create a FileResponse
+            response = FileResponse(
+                open(file_path, 'rb'),
+                content_type=content_type,
+                as_attachment=True,
+                filename=instance.original_filename
+            )
+
+            # Add Content-Length header
+            response['Content-Length'] = os.path.getsize(file_path)
+
+            logger.info(f"Serving file download: {instance.original_filename}")
+            return response
+
+        except Http404:
+            raise
+        except Exception as e:
+            error_msg = f"Download failed: {str(e)}"
+            logger.error(error_msg)
+            return Response(
+                {'error': error_msg},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def list(self, request, *args, **kwargs):
         start_time = time.time()
-
-        # Generate cache key from request parameters
-        cache_key = self._get_cache_key(request.query_params)
-
-        # Try to get data from cache
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            logger.info("Serving response from cache")
-            return Response(cached_data)
 
         # Get the queryset
         queryset = self.get_queryset()
@@ -56,7 +95,7 @@ class FileViewSet(viewsets.ModelViewSet):
         # Log the timing information
         logger.info(f"Query executed in {total_time:.2f}ms (Serialization: {serialize_time:.2f}ms)")
 
-        # Prepare response data
+        # Include timing information in the response data
         response_data = {
             'files': data,
             'metrics': {
@@ -64,9 +103,6 @@ class FileViewSet(viewsets.ModelViewSet):
                 'serializeTime': round(serialize_time, 2)
             }
         }
-
-        # Cache the response for 5 minutes
-        cache.set(cache_key, response_data, timeout=300)
 
         return Response(response_data)
 
@@ -198,14 +234,9 @@ class FileViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            error_msg = f"Upload failed for {file_obj.name if file_obj else 'unknown file'}: {str(e)}"
+            error_msg = f"Upload failed: {str(e)}"
             logger.error(error_msg)
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
             return Response(
-                {
-                    'error': error_msg,
-                    'traceback': traceback.format_exc()
-                },
+                {'error': error_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
