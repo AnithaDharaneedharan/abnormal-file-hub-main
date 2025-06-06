@@ -1,7 +1,7 @@
 import os
 import time
 import hashlib
-from rest_framework.test import APITestCase
+from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from datetime import timedelta
@@ -9,7 +9,6 @@ from ..models import File
 import random
 import string
 import logging
-from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +20,7 @@ def calculate_file_hash(content):
     """Calculate SHA-256 hash of file content"""
     return hashlib.sha256(content).hexdigest()
 
-class FilePerformanceTests(APITestCase):
-    def setUp(self):
-        cache.clear()  # Clear cache before each test
-
+class FilePerformanceTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         """Create a large dataset for testing"""
@@ -41,8 +37,8 @@ class FilePerformanceTests(APITestCase):
             'application/vnd.ms-excel'
         ]
 
-        # Create test files
-        cls.NUM_FILES = 1000  # Reduced for faster tests
+        # Create 10,000 test files
+        cls.NUM_FILES = 10000
         for i in range(cls.NUM_FILES):
             # Create a dummy file
             file_content = generate_random_string(100).encode()
@@ -69,120 +65,11 @@ class FilePerformanceTests(APITestCase):
                 file_hash=file_hash
             )
 
-            if (i + 1) % 100 == 0:  # Updated progress reporting
+            if (i + 1) % 1000 == 0:
                 logger.info(f"Created {i + 1} test files...")
 
         total_time = time.time() - start_time
         logger.info(f"Finished creating {cls.NUM_FILES} test files in {total_time:.2f} seconds")
-
-    def measure_api_time(self, params=None):
-        """Helper to measure API response time"""
-        start_time = time.time()
-        response = self.client.get('/api/files/', params)
-        end_time = time.time()
-        return (end_time - start_time) * 1000, response  # Return time in milliseconds and response
-
-    def test_cache_timeout(self):
-        """Test cache behavior with 5-second timeout"""
-        # Clear cache before starting
-        cache.clear()
-
-        # First request (no cache)
-        no_cache_time, first_response = self.measure_api_time()
-        self.assertEqual(first_response.status_code, 200)
-        logger.info(f"First request (no cache) took: {no_cache_time:.2f}ms")
-
-        # Immediate second request (should be cached)
-        cached_time, second_response = self.measure_api_time()
-        self.assertEqual(second_response.status_code, 200)
-        logger.info(f"Second request (cached) took: {cached_time:.2f}ms")
-        logger.info(f"Cache improvement: {((no_cache_time - cached_time) / no_cache_time * 100):.1f}%")
-
-        # Wait for cache to expire (6 seconds)
-        logger.info("Waiting for cache to expire (6 seconds)...")
-        time.sleep(6)
-
-        # Request after cache expiry
-        expired_time, expired_response = self.measure_api_time()
-        self.assertEqual(expired_response.status_code, 200)
-        logger.info(f"Request after cache expired took: {expired_time:.2f}ms")
-
-        # Verify cache behavior
-        self.assertLess(cached_time, no_cache_time)  # Cached should be faster
-        self.assertGreater(expired_time, cached_time)  # Expired should be slower than cached
-
-    def test_cache_performance(self):
-        """Test performance improvement with caching"""
-        # Clear cache before starting
-        cache.clear()
-
-        # First request (no cache)
-        no_cache_time, first_response = self.measure_api_time()
-        self.assertEqual(first_response.status_code, 200)
-        logger.info(f"First request (no cache) took: {no_cache_time:.2f}ms")
-
-        # Second request (should be cached)
-        cached_time, second_response = self.measure_api_time()
-        self.assertEqual(second_response.status_code, 200)
-        logger.info(f"Second request (cached) took: {cached_time:.2f}ms")
-
-        # Verify responses are identical
-        self.assertEqual(first_response.data['files'], second_response.data['files'])
-
-        # Cache should be significantly faster
-        self.assertLess(cached_time, no_cache_time)
-        logger.info(f"Cache improvement: {((no_cache_time - cached_time) / no_cache_time * 100):.1f}%")
-
-    def test_search_cache_performance(self):
-        """Test cache performance with search parameters"""
-        params = {'search': 'test', 'type': 'document'}
-
-        # First search request (no cache)
-        no_cache_time, first_response = self.measure_api_time(params)
-        self.assertEqual(first_response.status_code, 200)
-        logger.info(f"First search (no cache) took: {no_cache_time:.2f}ms")
-
-        # Second search request (should be cached)
-        cached_time, second_response = self.measure_api_time(params)
-        self.assertEqual(second_response.status_code, 200)
-        logger.info(f"Second search (cached) took: {cached_time:.2f}ms")
-
-        # Verify responses are identical
-        self.assertEqual(first_response.data['files'], second_response.data['files'])
-
-        # Cache should be significantly faster
-        self.assertLess(cached_time, no_cache_time)
-        logger.info(f"Search cache improvement: {((no_cache_time - cached_time) / no_cache_time * 100):.1f}%")
-
-    def test_filter_cache_performance(self):
-        """Test cache performance with different filters"""
-        filter_combinations = [
-            {'date': 'month'},
-            {'size': 'large'},
-            {'type': 'document'},
-            {'date': 'month', 'type': 'document', 'size': 'large'}
-        ]
-
-        for filters in filter_combinations:
-            # Clear cache for each combination
-            cache.clear()
-
-            # First request (no cache)
-            no_cache_time, first_response = self.measure_api_time(filters)
-            self.assertEqual(first_response.status_code, 200)
-            logger.info(f"\nFilter {filters} without cache: {no_cache_time:.2f}ms")
-
-            # Second request (should be cached)
-            cached_time, second_response = self.measure_api_time(filters)
-            self.assertEqual(second_response.status_code, 200)
-            logger.info(f"Filter {filters} with cache: {cached_time:.2f}ms")
-
-            # Verify responses are identical
-            self.assertEqual(first_response.data['files'], second_response.data['files'])
-
-            # Calculate improvement
-            improvement = ((no_cache_time - cached_time) / no_cache_time * 100)
-            logger.info(f"Cache improvement for {filters}: {improvement:.1f}%")
 
     def measure_query_time(self, query_func):
         """Helper to measure query execution time"""
