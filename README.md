@@ -2,6 +2,10 @@
 
 A modern, full-stack file management application built with Django and React. This application provides a robust and user-friendly interface for uploading, downloading, and managing files with advanced features like duplicate detection, file categorization, and search capabilities.
 
+
+## Instructions to execute
+Run the command `docker compose up --build` and the application will boot on `http://localhost:3000/` and backend on `http://localhost:8000/`
+
 ## Features
 
 ### File Management
@@ -87,6 +91,11 @@ A modern, full-stack file management application built with Django and React. Th
    python manage.py runserver
    ```
 
+6. Run the performance tests
+   ```bash
+   python manage.py test files.tests.test_performance -v 2
+   ```
+
 ### Frontend Setup
 1. Install dependencies:
    ```bash
@@ -135,13 +144,7 @@ A modern, full-stack file management application built with Django and React. Th
 - `DELETE /api/files/{id}/` - Delete a file
 - `GET /api/files/{id}/download/` - Download a file
 
-## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
 ## License
 
